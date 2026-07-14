@@ -1,5 +1,6 @@
 /**
- * ProtectedRoute.jsx
+
+* ProtectedRoute.jsx
  * ------------------
  * Componente de guarda de rutas autenticadas.
  *

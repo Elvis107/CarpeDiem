@@ -2,37 +2,17 @@
  * ParkingMap.jsx
  * --------------
  * Mapa visual en tiempo real del estacionamiento Carpe Diem.
- *
- * Muestra los 32 espacios del estacionamiento distribuidos en dos columnas
- * laterales y un pasillo central. Los colores de cada espacio reflejan
- * su estado actual obtenido desde Supabase con suscripción en tiempo real.
- *
- * Colores de estado:
- *   - Verde  → disponible
- *   - Rojo   → ocupado
- *   - Amarillo → reservado
- *
- * Espacios XL (para vehículos grandes): 1, 2, 3, 17, 18, 19, 20
- * Espacios L  (normales):               resto
- *
- * Props:
- *   onSpotClick (función, opcional) → se ejecuta al hacer clic en un espacio.
- *     Recibe el objeto del espacio desde Supabase: { id_espacio, estado, patente, ... }
- *     Si no se pasa, el mapa es solo de lectura.
+ * OPTIMIZADO: Alturas compactas y pasillo auto-ajustable para evitar cortes en pantalla.
  */
 
 import { useEffect, useState } from "react";
 import { supabase } from "../supabaseClient";
 
-export default function ParkingMap({ onSpotClick }) {
-  // Lista de espacios cargados desde Supabase
+export default function ParkingMap({ onSpotClick, orientation = "vertical" }) {
+  const isH = orientation === "horizontal";
   const [espacios, setEspacios] = useState([]);
 
   useEffect(() => {
-    /**
-     * Carga inicial de todos los espacios del estacionamiento
-     * ordenados por id_espacio.
-     */
     const fetchEspacios = async () => {
       const { data } = await supabase
         .from("espacios")
@@ -43,118 +23,162 @@ export default function ParkingMap({ onSpotClick }) {
 
     fetchEspacios();
 
-    /**
-     * Suscripción en tiempo real a cambios en la tabla "espacios".
-     * Cuando Supabase emite un evento (INSERT, UPDATE, DELETE),
-     * actualiza solo el espacio afectado en el estado local.
-     */
     const channel = supabase
       .channel("espacios-realtime")
       .on(
         "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "espacios",
-        },
+        { event: "*", schema: "public", table: "espacios" },
         (payload) => {
           setEspacios((prev) =>
             prev.map((e) =>
-              e.id_espacio === payload.new.id_espacio ? payload.new : e,
-            ),
+              e.id_espacio === payload.new.id_espacio ? payload.new : e
+            )
           );
-        },
+        }
       )
       .subscribe();
 
-    // Limpieza: cancela la suscripción al desmontar el componente
     return () => supabase.removeChannel(channel);
   }, []);
 
-  /**
-   * Determina si un espacio es de tipo XL (vehículo grande).
-   * @param {number} n - Número de espacio
-   * @returns {boolean}
-   */
   const isXL = (n) => [1, 2, 3, 17, 18, 19, 20].includes(n);
 
-  /**
-   * Retorna las clases de color Tailwind según el estado del espacio.
-   * @param {string} estado - "disponible" | "ocupado" | "reservado"
-   * @returns {string} - Clases de Tailwind CSS
-   */
-  const getColor = (estado) => {
-    if (estado === "ocupado") return "bg-red-400 border-red-500 text-white";
+  const getEstiloEstado = (estado) => {
+    if (estado === "ocupado")
+      return {
+        led: "bg-red-500 shadow-[0_0_7px_2px_rgba(239,68,68,0.85)]",
+        ring: "border-red-500/50 hover:border-red-400/70",
+        wash: "shadow-[inset_0_0_14px_rgba(239,68,68,0.18)]",
+        text: "text-red-50",
+      };
     if (estado === "reservado")
-      return "bg-yellow-300 border-yellow-500 text-yellow-900";
-    return "bg-green-100 border-green-400 text-green-800"; // disponible
+      return {
+        led: "bg-amber-400 shadow-[0_0_7px_2px_rgba(251,191,36,0.8)]",
+        ring: "border-amber-400/50 hover:border-amber-300/70",
+        wash: "shadow-[inset_0_0_14px_rgba(251,191,36,0.16)]",
+        text: "text-amber-50",
+      };
+    return {
+      led: "bg-emerald-400 shadow-[0_0_7px_2px_rgba(52,211,153,0.75)]",
+      ring: "border-emerald-400/40 hover:border-emerald-300/60",
+      wash: "shadow-[inset_0_0_10px_rgba(16,185,129,0.12)]",
+      text: "text-emerald-50",
+    };
   };
 
-  // Espacios de la columna izquierda (del 32 al 17, de arriba hacia abajo)
-  const leftSpots = [
-    32, 31, 30, 29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17,
-  ];
-
-  // Espacios de la columna derecha (del 1 al 16, de arriba hacia abajo)
+  const leftSpots = [32, 31, 30, 29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17];
   const rightSpots = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
 
-  /**
-   * Busca en el estado local el objeto de un espacio por su número.
-   * @param {number} id - Número de espacio
-   * @returns {object|undefined}
-   */
-  const getEspacio = (id) =>
-    espacios.find((e) => Number(e.id_espacio) === Number(id));
+  const getEspacio = (id) => espacios.find((e) => Number(e.id_espacio) === Number(id));
+
+  const renderSpot = (n) => {
+    const e = getEspacio(n);
+    const s = getEstiloEstado(e?.estado);
+    return (
+      <div
+        key={n}
+        onClick={() => onSpotClick && onSpotClick(e)}
+        className={`group relative w-14 h-8 rounded-md bg-[#2a2d33] border ${s.ring} ${s.wash} flex flex-col items-center justify-center gap-0.5 cursor-pointer transition-all duration-200 hover:scale-[1.06] hover:z-10 shrink-0`}
+      >
+        <span className="pointer-events-none absolute top-0.5 left-0.5 w-1 h-1 border-t border-l border-white/15" />
+        <span className="pointer-events-none absolute top-0.5 right-0.5 w-1 h-1 border-t border-r border-white/15" />
+        <span className="pointer-events-none absolute bottom-0.5 left-0.5 w-1 h-1 border-b border-l border-white/15" />
+        <span className="pointer-events-none absolute bottom-0.5 right-0.5 w-1 h-1 border-b border-r border-white/15" />
+
+        <span className={`w-1 h-1 rounded-full ${s.led}`} />
+
+        <span className={`font-stencil text-[9px] tracking-wide leading-none ${s.text}`}>
+          {isXL(n) ? `XL·${n}` : `L·${n}`}
+        </span>
+
+        {e?.patente && (
+          <span className="font-mono text-[6px] tracking-wider text-white/45 leading-none">
+            {e.patente}
+          </span>
+        )}
+      </div>
+    );
+  };
 
   return (
-    <div className="bg-[#d8e8d3] rounded-[35px] p-8 shadow-2xl flex gap-8 items-start">
-      {/* Columna izquierda (espacios 17–32) */}
-      <div className="flex flex-col gap-2">
-        {leftSpots.map((n) => {
-          const e = getEspacio(n);
-          return (
-            <div
-              key={n}
-              onClick={() => onSpotClick && onSpotClick(e)}
-              className={`w-20 h-11 rounded-xl flex flex-col items-center justify-center border text-xs font-semibold cursor-pointer transition-all ${getColor(e?.estado)}`}
-            >
-              {/* Etiqueta XL o L según tipo de espacio */}
-              <span>{isXL(n) ? `XL ${n}` : `L ${n}`}</span>
+    <div className="relative bg-gradient-to-b from-[#22252a] to-[#17191c] rounded-2xl p-4 shadow-2xl overflow-visible max-h-full flex flex-col justify-between">
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Allerta+Stencil&display=swap');
+        .font-stencil { font-family: 'Allerta Stencil', sans-serif; }
+      `}</style>
 
-              {/* Patente del vehículo si el espacio está ocupado */}
-              {e?.patente && (
-                <span className="text-[9px] opacity-75">{e.patente}</span>
-              )}
+      <div
+        className="pointer-events-none absolute inset-0 opacity-[0.05]"
+        style={{
+          backgroundImage:
+            "radial-gradient(circle at 20% 20%, #fff 0.5px, transparent 0.5px), radial-gradient(circle at 60% 70%, #fff 0.5px, transparent 0.5px)",
+          backgroundSize: "26px 26px, 34px 34px",
+        }}
+      />
+      
+      <div className={`relative flex ${isH ? "flex-col items-stretch gap-2" : "flex-row items-center gap-3 justify-center"}`}>
+        {/* Primer grupo de espacios */}
+        <div className={isH ? "flex flex-row flex-wrap gap-1" : "flex flex-col gap-1"}>
+          {leftSpots.map(renderSpot)}
+        </div>
+
+        {/* Pasillo central optimizado auto-ajustable */}
+        <div
+          className={
+            isH
+              ? "relative w-full min-h-[80px] rounded-xl bg-[#131518] border-2 border-white/10 overflow-hidden flex flex-row items-center justify-center gap-2 px-8"
+              : "relative w-[85px] self-stretch rounded-[18px] bg-[#131518] border-2 border-white/10 overflow-hidden flex flex-col items-center justify-between py-3 gap-1"
+          }
+        >
+          <div
+            className={
+              isH
+                ? "pointer-events-none absolute left-0 right-0 top-1/2 -translate-y-1/2 h-[3px] opacity-60"
+                : "pointer-events-none absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-[3px] opacity-60"
+            }
+            style={{
+              backgroundImage: isH
+                ? "repeating-linear-gradient(to right, #f4b400 0, #f4b400 16px, transparent 16px, transparent 30px)"
+                : "repeating-linear-gradient(to bottom, #f4b400 0, #f4b400 16px, transparent 16px, transparent 30px)",
+            }}
+          />
+
+          <span className="relative z-10 text-[7px] tracking-[0.2em] text-white/30 font-bold uppercase text-center block leading-none">
+            ZONA TECHADA
+          </span>
+
+          {[1, 2, 3, 4, 5].map((x) => (
+            <div
+              key={x}
+              className="relative z-10 w-12 h-7 rounded-md bg-gradient-to-b from-[#2b2f35] to-[#202226] border border-white/10 flex items-center justify-center shrink-0"
+            >
+              <div className="w-7 h-3.5 rounded-sm bg-white/[0.04] border border-white/5 shadow-inner" />
             </div>
-          );
-        })}
+          ))}
+        </div>
+
+        {/* Segundo grupo de espacios */}
+        <div className={isH ? "flex flex-row flex-wrap gap-1" : "flex flex-col gap-1"}>
+          {rightSpots.map(renderSpot)}
+        </div>
       </div>
 
-      {/* Pasillo central (representación visual del área de circulación) */}
-      <div className="w-[200px] min-h-[600px] rounded-[30px] border-[5px] border-green-700 flex flex-col items-center justify-start pt-8 gap-2">
-        {/* 6 cajones internos (zona techada o referencia visual) */}
-        {[1, 2, 3, 4, 5, 6].map((x) => (
-          <div key={x} className="w-20 h-16 bg-gray-100 border rounded-md" />
-        ))}
-      </div>
-
-      {/* Columna derecha (espacios 1–16) */}
-      <div className="flex flex-col gap-2">
-        {rightSpots.map((n) => {
-          const e = getEspacio(n);
-          return (
-            <div
-              key={n}
-              onClick={() => onSpotClick && onSpotClick(e)}
-              className={`w-20 h-11 rounded-xl flex flex-col items-center justify-center border text-xs font-semibold cursor-pointer transition-all ${getColor(e?.estado)}`}
-            >
-              <span>{isXL(n) ? `XL ${n}` : `L ${n}`}</span>
-              {e?.patente && (
-                <span className="text-[9px] opacity-75">{e.patente}</span>
-              )}
-            </div>
-          );
-        })}
+      {/* Leyenda de estados garantizada sin cortes */}
+      <div className="relative mt-3 flex items-center justify-center gap-5 border-t border-white/10 pt-2.5 w-full block">
+        <div className="flex items-center justify-center gap-5 flex-wrap">
+          <span className="flex items-center gap-1.5 text-[9px] font-bold text-white/50 uppercase tracking-wider">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_6px_1px_rgba(52,211,153,0.7)]" />
+            Disponible
+          </span>
+          <span className="flex items-center gap-1.5 text-[9px] font-bold text-white/50 uppercase tracking-wider">
+            <span className="w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_6px_1px_rgba(251,191,36,0.7)]" />
+            Reservado
+          </span>
+          <span className="flex items-center gap-1.5 text-[9px] font-bold text-white/50 uppercase tracking-wider">
+            <span className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_6px_1px_rgba(239,68,68,0.7)]" />
+            Ocupado
+          </span>
+        </div>
       </div>
     </div>
   );
