@@ -132,8 +132,6 @@ export default function Entrance() {
           .eq("nombre_categoria", categoria === "grande" ? "Grande" : "Normal")
           .maybeSingle();
 
-        console.log("Categoria encontrada:", cat, errCat);
-
         const { data: nuevoVehiculo, error: errVehiculo } = await supabase
           .from("vehiculo")
           .insert({
@@ -141,8 +139,6 @@ export default function Entrance() {
             id_categoria: cat?.id_categoria || null,
           })
           .select();
-
-        console.log("Vehiculo insertado:", nuevoVehiculo, errVehiculo);
 
         if (errVehiculo) {
           setError("Error al guardar vehículo: " + errVehiculo.message);
@@ -160,8 +156,6 @@ export default function Entrance() {
         })
         .select()
         .single();
-
-      console.log("Ingreso registrado:", ingreso, errIngreso);
 
       if (errIngreso) {
         setError("Error al registrar ingreso: " + errIngreso.message);
@@ -284,21 +278,19 @@ export default function Entrance() {
                 <div className="flex gap-3">
                   <button
                     onClick={() => setCategoria("normal")}
-                    className={`flex-1 py-2.5 rounded-xl border-2 text-sm font-semibold transition-all ${
-                      categoria === "normal"
+                    className={`flex-1 py-2.5 rounded-xl border-2 text-sm font-semibold transition-all ${categoria === "normal"
                         ? "border-green-500 bg-green-50 text-green-700"
                         : "border-gray-200 text-gray-500"
-                    }`}
+                      }`}
                   >
                     Normal
                   </button>
                   <button
                     onClick={() => setCategoria("grande")}
-                    className={`flex-1 py-2.5 rounded-xl border-2 text-sm font-semibold transition-all ${
-                      categoria === "grande"
+                    className={`flex-1 py-2.5 rounded-xl border-2 text-sm font-semibold transition-all ${categoria === "grande"
                         ? "border-green-500 bg-green-50 text-green-700"
                         : "border-gray-200 text-gray-500"
-                    }`}
+                      }`}
                   >
                     Grande / XL
                   </button>
