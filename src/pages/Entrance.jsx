@@ -127,7 +127,7 @@ export default function Entrance() {
           .eq("nombre_categoria", categoria === "grande" ? "Grande" : "Normal")
           .maybeSingle();
 
-        const { error: errVehiculo } = await supabase
+        const { data: nuevoVehiculo, error: errVehiculo } = await supabase
           .from("vehiculo")
           .insert({
             patente: plate,
@@ -300,14 +300,48 @@ export default function Entrance() {
                 <button onClick={limpiarFormulario} className="col-span-3 h-14 rounded-xl bg-amber-50 border border-amber-100 hover:bg-amber-100 text-amber-700 font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1 active:scale-95 transition-all"><Icon icon="mdi:refresh" className="text-lg" /> Limpiar</button>
               </div>
             </div>
-          </div>
+            {/* Si el vehículo es nuevo, pedir categoría */}
+            {vehiculoBuscado && !vehiculoExistente && (
+              <div className="mb-4 flex flex-col gap-3">
+                <p className="text-sm text-amber-600 font-semibold">
+                  Vehículo nuevo — selecciona la categoría
+                </p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setCategoria("normal")}
+                    className={`flex-1 py-2.5 rounded-xl border-2 text-sm font-semibold transition-all ${categoria === "normal"
+                        ? "border-green-500 bg-green-50 text-green-700"
+                        : "border-gray-200 text-gray-500"
+                      }`}
+                  >
+                    Normal
+                  </button>
+                  <button
+                    onClick={() => setCategoria("grande")}
+                    className={`flex-1 py-2.5 rounded-xl border-2 text-sm font-semibold transition-all ${categoria === "grande"
+                        ? "border-green-500 bg-green-50 text-green-700"
+                        : "border-gray-200 text-gray-500"
+                      }`}
+                  >
+                    Grande / XL
+                  </button>
+                </div>
+              </div>
+            )}
 
-          {/* Botón de Confirmación */}
-          <div className="mt-auto">
-            {error && (
-              <p className="text-xs text-rose-500 font-bold mb-2 text-center whitespace-normal break-words max-w-full">
-                {error}
-              </p>
+            {/* Si ya existe, mostrar info */}
+            {vehiculoBuscado && vehiculoExistente && (
+              <div className="mb-4 bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-sm text-green-700">
+                ✓ Vehículo ya registrado
+              </div>
+            )}
+
+            {/* Ingreso activo */}
+            {registroActivo && (
+              <div className="mb-4 bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 text-sm text-blue-700 text-center">
+                ✓ Entrada registrada — {registroActivo.fecha_ingreso}{" "}
+                {registroActivo.hora_ingreso}
+              </div>
             )}
             
             <button

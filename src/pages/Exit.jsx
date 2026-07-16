@@ -86,11 +86,14 @@ export default function Exit() {
 
     const { data: ingreso } = await supabase
       .from("ingreso")
-      .select(`
-        id_ingreso, patente, id_espacio, fecha_ingreso, hora_ingreso,
-        vehiculo ( categoria_vehiculo ( nombre_categoria, valor_hora ) )
-      `)
+      .select(
+        `
+      id_ingreso, patente, id_espacio, fecha_ingreso, hora_ingreso,
+      vehiculo ( categoria_vehiculo ( nombre_categoria, valor_hora ) )
+    `,
+      )
       .eq("patente", patente)
+      .order("fecha_ingreso", { ascending: false })
       .order("hora_ingreso", { ascending: false })
       .limit(1)
       .maybeSingle();
