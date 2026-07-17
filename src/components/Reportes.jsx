@@ -1,5 +1,4 @@
 import { Icon } from "@iconify/react";
-
 export default function Reportes({ onClose }) {
   return (
     <div className="bg-gradient-to-b from-white via-white to-slate-50 rounded-[2rem] shadow-[0_20px_60px_rgba(15,23,42,0.08)] border border-slate-200/80 w-full min-w-0 flex-1 min-h-0 overflow-hidden flex flex-col">
