@@ -1,7 +1,17 @@
 /**
  * Dashboard.jsx
  * Página principal del sistema CarpeDiem para el encargado del estacionamiento.
- * OPTIMIZADO: Diseño limpio a pantalla completa, sin desbordamientos ni cortes visuales.
+ *
+ * Muestra:
+ *   - Sidebar de navegación
+ *   - Mapa del estacionamiento en tiempo real (ParkingMap)
+ *   - Botones de acceso rápido a las páginas de Entrada y Salida
+ *     (se abren en una nueva pestaña para uso en terminales táctiles)
+ *
+ * Funcionalidad manual:
+ *   El encargado puede hacer clic en cualquier espacio del mapa para
+ *   cambiar su estado manualmente (ciclo: disponible → ocupado → reservado → disponible).
+ *   Esto actualiza directamente la tabla "espacios" en Supabase.
  */
 
 import { Icon } from "@iconify/react";
@@ -9,12 +19,17 @@ import { useEffect, useRef, useState } from "react";
 import { supabase } from "../supabaseClient";
 import Sidebar from "../components/Sidebar";
 import ParkingMap from "../components/ParkingMap";
+import UltimoMovimiento from "../components/lastmove";
 import VehiculosActivosModal from "../components/ActVehicles";
+import HistorialReportes from "../components/HistorialReportes";
+import Reportes from "../components/Reportes";
 
 export default function Dashboard() {
   const [lastIngreso, setLastIngreso] = useState(null);
   const [lastEgreso, setLastEgreso] = useState(null);
   const [showActivosModal, setShowActivosModal] = useState(false);
+  const [showHistorial, setShowHistorial] = useState(false);
+  const [showReportes, setShowReportes] = useState(false);
   const [sonidoActivo, setSonidoActivo] = useState(true);
   const audioCtxRef = useRef(null);
 
@@ -66,42 +81,63 @@ export default function Dashboard() {
       console.error("No se pudo reproducir el sonido:", e);
     }
   };
-
+  
   const fetchUltimoIngreso = async () => {
-    const { data } = await supabase
-      .from("ingreso")
-      .select(`
-        id_ingreso, patente, id_espacio, fecha_ingreso, hora_ingreso,
-        vehiculo ( categoria_vehiculo ( nombre_categoria, valor_hora ) )
-      `)
-      .order("fecha_ingreso", { ascending: false })
-      .order("hora_ingreso", { ascending: false })
-      .limit(1)
+  const { data: ingresos, error } = await supabase
+    .from("ingreso")
+    .select(`
+      id_ingreso,
+      patente,
+      id_espacio,
+      fecha_ingreso,
+      hora_ingreso,
+      vehiculo (
+        categoria_vehiculo (
+          nombre_categoria,
+          valor_hora
+        )
+      )
+    `)
+    .order("fecha_ingreso", { ascending: false })
+    .order("hora_ingreso", { ascending: false })
+    .limit(20);
+
+  if (error || !ingresos?.length) {
+    setLastIngreso(null);
+    return;
+  }
+
+  for (const ingreso of ingresos) {
+    const { data: salida } = await supabase
+      .from("salida")
+      .select("id_salida")
+      .eq("id_ingreso", ingreso.id_ingreso)
       .maybeSingle();
 
-    if (data) {
-      const { data: salidaExistente } = await supabase
-        .from("salida")
-        .select("id_salida")
-        .eq("id_ingreso", data.id_ingreso)
-        .maybeSingle();
-
+    if (!salida) {
       setLastIngreso({
-        ...data,
-        categoria: data.vehiculo?.categoria_vehiculo?.nombre_categoria,
-        valorHora: data.vehiculo?.categoria_vehiculo?.valor_hora,
-        activo: !salidaExistente,
+        ...ingreso,
+        categoria: ingreso.vehiculo?.categoria_vehiculo?.nombre_categoria,
+        valorHora: ingreso.vehiculo?.categoria_vehiculo?.valor_hora,
+        activo: true,
       });
+
+      return;
     }
-  };
+  }
+
+setLastIngreso(null);
+};
 
   const fetchUltimoEgreso = async () => {
     const { data } = await supabase
       .from("salida")
-      .select(`
+      .select(
+        `
         id_salida, tiempo_total, costo_total, fecha_salida, hora_salida,
         ingreso ( patente )
-      `)
+      `,
+      )
       .order("fecha_salida", { ascending: false })
       .order("hora_salida", { ascending: false })
       .limit(1)
@@ -149,57 +185,136 @@ export default function Dashboard() {
   }, [sonidoActivo]);
 
   return (
-    <div className="flex h-screen overflow-hidden">
-      <Sidebar onOpenVehiculosServicio={() => setShowActivosModal(true)} />
+    <div className="relative flex h-screen overflow-hidden bg-[#eef3ef] text-slate-900">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(16,185,129,0.12),_transparent_28%),radial-gradient(circle_at_top_right,_rgba(14,165,233,0.10),_transparent_30%),linear-gradient(180deg,_rgba(255,255,255,0.9),_rgba(238,243,239,1))]" />
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(148,163,184,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,0.04)_1px,transparent_1px)] bg-[size:36px_36px] opacity-40" />
 
-      {/* Columna izquierda: último ingreso arriba, último egreso abajo */}
-      <div className="w-[400px] shrink-0 h-screen flex flex-col p-6 gap-4 overflow-y-auto bg-gray-50">
-        <div className="flex-1 flex flex-col">
-          <h2 className="text-sm font-bold text-gray-400 tracking-widest mb-3">
-            ÚLTIMO INGRESO
-          </h2>
-          <UltimoMovimiento tipo="ingreso" data={lastIngreso} />
-        </div>
+      <div className="relative z-20 shrink-0">
+        <Sidebar
+          onOpenMapa={() => {
+            setShowActivosModal(false);
+            setShowHistorial(false);
+            setShowReportes(false);
+          }}
 
-        <div className="flex-1 flex flex-col">
-          <h2 className="text-sm font-bold text-gray-400 tracking-widest mb-3">
-            ÚLTIMO EGRESO
-          </h2>
-          <UltimoMovimiento tipo="egreso" data={lastEgreso} />
-        </div>
+          onOpenVehiculosServicio={() => {
+            setShowActivosModal((v) => !v);
+            setShowHistorial(false);
+            setShowReportes(false);
+          }}
+          onOpenHistorial={() => {
+            setShowHistorial((v) => !v);
+            setShowActivosModal(false);
+            setShowReportes(false);
+          }}
+          onOpenReportes={() => {
+            setShowReportes((v) => !v);
+            setShowActivosModal(false);
+            setShowHistorial(false);
+          }}
+        />
       </div>
 
-      {/* Columna derecha: mapa del estacionamiento (ocupa el resto) */}
-      <div className="flex-1 h-screen relative bg-white flex flex-col">
-        <div className="absolute top-6 right-6 z-10">
+      <div className="relative z-10 flex-1 min-w-0 h-screen flex flex-col px-3 py-3 sm:px-5 lg:px-6 lg:py-4">
+        <div className="mb-3 flex items-center justify-between gap-4 rounded-[28px] border border-slate-200/80 bg-white/85 px-4 py-3 shadow-[0_16px_40px_-24px_rgba(15,23,42,0.2)] backdrop-blur">
+          <div className="min-w-0">
+            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-700">
+              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+              Centro de control
+            </div>
+            <h1 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900 sm:text-[2rem]">
+              Dashboard del estacionamiento
+            </h1>
+            <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-500">
+              Supervisión en tiempo real del mapa, accesos rápidos y últimos
+              movimientos con un acabado más limpio y profesional.
+            </p>
+          </div>
+
           <button
             onClick={() => setSonidoActivo((s) => !s)}
-            className="flex items-center gap-2 bg-white hover:bg-gray-100 text-gray-600 px-4 py-3 rounded-xl transition-all shadow-md border"
+            className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-600 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-300 hover:text-slate-900 hover:shadow-md"
             title={sonidoActivo ? "Silenciar notificaciones" : "Activar notificaciones"}
           >
             <Icon
               icon={sonidoActivo ? "mdi:volume-high" : "mdi:volume-off"}
               className="text-xl"
             />
+            {sonidoActivo ? "Sonido activo" : "Silenciado"}
           </button>
         </div>
 
-        <h1 className="text-xl font-bold text-gray-700 text-center pt-6">
-          Mapa del estacionamiento
-        </h1>
+        <div className="flex-1 min-h-0 flex gap-4 xl:gap-5">
+          <div className="flex-1 min-w-0 flex flex-col">
+            {!showActivosModal && !showHistorial && !showReportes && (
+                <div className="mb-2 flex items-center justify-between gap-3 px-1">
+                  <div>
+                  <h2 className="text-lg font-semibold text-slate-900 sm:text-xl">
+                    Mapa del estacionamiento
+                  </h2>
+                  <p className="text-sm text-slate-500">
+                    Haz clic en un espacio para cambiar su estado manualmente
+                  </p>
+                </div>
+                <div className="hidden items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400 md:inline-flex">
+                  <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                  Vista en vivo
+                </div>
+              </div>
+            )}
 
-        <div className="flex-1 min-h-0 p-6">
-          <ParkingMap onSpotClick={handleSpotClick} />
+            <div className="flex-1 min-h-0 min-w-0">
+              {showActivosModal ? (
+                <VehiculosActivosModal onClose={() => setShowActivosModal(false)} />
+              ) : showHistorial ? (
+                <HistorialReportes onClose={() => setShowHistorial(false)} />
+              ) : showReportes ? (
+                <Reportes onClose={() => setShowReportes(false)} />
+              ) : (
+                <div className="h-full min-h-[calc(100vh-180px)] overflow-hidden rounded-[30px] border border-slate-200/80 bg-white shadow-[0_24px_70px_-30px_rgba(15,23,42,0.18)]">
+                  <div className="h-full min-h-0 p-0">
+                    <ParkingMap onSpotClick={handleSpotClick} />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {!showActivosModal && !showHistorial && !showReportes && (
+              <p className="pt-3 text-center text-sm text-slate-400">
+                Operación continua y cambios en tiempo real.
+              </p>
+            )}
+          </div>
+
+          {!showActivosModal && !showHistorial && !showReportes && (
+            <aside className="w-[340px] shrink-0 h-full flex flex-col gap-4 overflow-y-auto rounded-[30px] border border-slate-200/80 bg-white/85 p-4 shadow-[0_24px_70px_-30px_rgba(15,23,42,0.16)] backdrop-blur">
+              <div className="rounded-[26px] bg-emerald-50/80 border border-emerald-100 p-3.5 shadow-sm transition-transform duration-200 hover:-translate-y-0.5">
+                <div className="mb-3 flex items-center gap-2">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
+                    <Icon icon="mdi:car-arrow-right" className="text-base" />
+                  </div>
+                  <h2 className="text-[11px] font-bold text-emerald-700 tracking-[0.18em] uppercase">
+                    Último ingreso
+                  </h2>
+                </div>
+                <UltimoMovimiento tipo="ingreso" data={lastIngreso} />
+              </div>
+
+              <div className="rounded-[26px] bg-rose-50/80 border border-rose-100 p-3.5 shadow-sm transition-transform duration-200 hover:-translate-y-0.5">
+                <div className="mb-3 flex items-center gap-2">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-rose-100 text-rose-700">
+                    <Icon icon="mdi:car-arrow-left" className="text-base" />
+                  </div>
+                  <h2 className="text-[11px] font-bold text-rose-600 tracking-[0.18em] uppercase">
+                    Último egreso
+                  </h2>
+                </div>
+                <UltimoMovimiento tipo="egreso" data={lastEgreso} />
+              </div>
+            </aside>
+          )}
         </div>
-
-        <p className="text-center text-sm text-gray-400 pb-4">
-          Haz clic en un espacio para cambiar su estado manualmente
-        </p>
       </div>
-
-      {showActivosModal && (
-        <VehiculosActivosModal onClose={() => setShowActivosModal(false)} />
-      )}
     </div>
   );
 }

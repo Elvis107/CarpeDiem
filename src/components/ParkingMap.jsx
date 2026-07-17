@@ -2,7 +2,23 @@
  * ParkingMap.jsx
  * --------------
  * Mapa visual en tiempo real del estacionamiento Carpe Diem.
- * OPTIMIZADO: Alturas compactas y pasillo auto-ajustable para evitar cortes en pantalla.
+ *
+ * Muestra los 32 espacios del estacionamiento distribuidos en dos columnas
+ * laterales y un pasillo central. Los colores de cada espacio reflejan
+ * su estado actual obtenido desde Supabase con suscripción en tiempo real.
+ *
+ * Colores de estado:
+ *   - Verde  → disponible
+ *   - Rojo   → ocupado
+ *   - Amarillo → reservado
+ *
+ * Espacios XL (para vehículos grandes): 1, 2, 3, 17, 18, 19, 20
+ * Espacios L  (normales):               resto
+ *
+ * Props:
+ *   onSpotClick (función, opcional) → se ejecuta al hacer clic en un espacio.
+ *     Recibe el objeto del espacio desde Supabase: { id_espacio, estado, patente, ... }
+ *     Si no se pasa, el mapa es solo de lectura.
  */
 
 import { useEffect, useRef, useState } from "react";
@@ -33,10 +49,10 @@ export default function ParkingMap({ onSpotClick }) {
         (payload) => {
           setEspacios((prev) =>
             prev.map((e) =>
-              e.id_espacio === payload.new.id_espacio ? payload.new : e
-            )
+              e.id_espacio === payload.new.id_espacio ? payload.new : e,
+            ),
           );
-        }
+        },
       )
       .subscribe();
 
