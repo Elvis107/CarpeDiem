@@ -81,11 +81,11 @@ export default function Dashboard() {
       console.error("No se pudo reproducir el sonido:", e);
     }
   };
-  
+
   const fetchUltimoIngreso = async () => {
-  const { data: ingresos, error } = await supabase
-    .from("ingreso")
-    .select(`
+    const { data: ingresos, error } = await supabase
+      .from("ingreso")
+      .select(`
       id_ingreso,
       patente,
       id_espacio,
@@ -98,36 +98,36 @@ export default function Dashboard() {
         )
       )
     `)
-    .order("fecha_ingreso", { ascending: false })
-    .order("hora_ingreso", { ascending: false })
-    .limit(20);
+      .order("fecha_ingreso", { ascending: false })
+      .order("hora_ingreso", { ascending: false })
+      .limit(20);
 
-  if (error || !ingresos?.length) {
-    setLastIngreso(null);
-    return;
-  }
-
-  for (const ingreso of ingresos) {
-    const { data: salida } = await supabase
-      .from("salida")
-      .select("id_salida")
-      .eq("id_ingreso", ingreso.id_ingreso)
-      .maybeSingle();
-
-    if (!salida) {
-      setLastIngreso({
-        ...ingreso,
-        categoria: ingreso.vehiculo?.categoria_vehiculo?.nombre_categoria,
-        valorHora: ingreso.vehiculo?.categoria_vehiculo?.valor_hora,
-        activo: true,
-      });
-
+    if (error || !ingresos?.length) {
+      setLastIngreso(null);
       return;
     }
-  }
 
-setLastIngreso(null);
-};
+    for (const ingreso of ingresos) {
+      const { data: salida } = await supabase
+        .from("salida")
+        .select("id_salida")
+        .eq("id_ingreso", ingreso.id_ingreso)
+        .maybeSingle();
+
+      if (!salida) {
+        setLastIngreso({
+          ...ingreso,
+          categoria: ingreso.vehiculo?.categoria_vehiculo?.nombre_categoria,
+          valorHora: ingreso.vehiculo?.categoria_vehiculo?.valor_hora,
+          activo: true,
+        });
+
+        return;
+      }
+    }
+
+    setLastIngreso(null);
+  };
 
   const fetchUltimoEgreso = async () => {
     const { data } = await supabase
@@ -181,7 +181,7 @@ setLastIngreso(null);
       supabase.removeChannel(canalIngreso);
       supabase.removeChannel(canalSalida);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [sonidoActivo]);
 
   return (
@@ -217,18 +217,16 @@ setLastIngreso(null);
 
       <div className="relative z-10 flex-1 min-w-0 h-screen flex flex-col px-3 py-3 sm:px-5 lg:px-6 lg:py-4">
         <div className="mb-3 flex items-center justify-between gap-4 rounded-[28px] border border-slate-200/80 bg-white/85 px-4 py-3 shadow-[0_16px_40px_-24px_rgba(15,23,42,0.2)] backdrop-blur">
-          <div className="min-w-0">
-            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-700">
-              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+          <div className="group min-w-0">
+            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-700 transition-all duration-300 group-hover:border-emerald-200 group-hover:bg-emerald-100">
+              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse transition-transform duration-300 group-hover:scale-125" />
               Centro de control
             </div>
-            <h1 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900 sm:text-[2rem]">
-              Dashboard del estacionamiento
+
+            <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 transition-all duration-300 group-hover:text-emerald-700 sm:text-[2.5rem]">
+              ESTACIONAMIENTO CARPEDIEM
             </h1>
-            <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-500">
-              Supervisión en tiempo real del mapa, accesos rápidos y últimos
-              movimientos con un acabado más limpio y profesional.
-            </p>
+            <div className="mt-4 h-1 w-16 rounded-full bg-emerald-500 transition-all duration-500 group-hover:w-28" />
           </div>
 
           <button
@@ -247,8 +245,8 @@ setLastIngreso(null);
         <div className="flex-1 min-h-0 flex gap-4 xl:gap-5">
           <div className="flex-1 min-w-0 flex flex-col">
             {!showActivosModal && !showHistorial && !showReportes && (
-                <div className="mb-2 flex items-center justify-between gap-3 px-1">
-                  <div>
+              <div className="mb-2 flex items-center justify-between gap-3 px-1">
+                <div>
                   <h2 className="text-lg font-semibold text-slate-900 sm:text-xl">
                     Mapa del estacionamiento
                   </h2>

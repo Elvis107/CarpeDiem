@@ -1,21 +1,3 @@
-/**
- * Entrance.jsx
- * ------------
- * Página de registro de entrada de vehículos al estacionamiento Carpe Diem.
- *
- * Flujo de registro:
- *   1. El operador escribe la patente con el teclado virtual
- *   2. Al completar 8 caracteres (ej: AA-BB-12), se busca el vehículo en Supabase
- *   3a. Si el vehículo existe → muestra confirmación y permite registrar entrada
- *   3b. Si el vehículo es nuevo → muestra selector de categoría (Normal / XL)
- *       y crea el vehículo antes de registrar la entrada
- *   4. Se inserta un registro en la tabla "ingreso" con fecha y hora actuales
- *
- * Modal de seguridad (botón "Volver"):
- *   Para evitar salidas accidentales, al presionar "Volver" se solicita
- *   la contraseña del encargado. Solo si es correcta se navega al dashboard.
- */
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Icon } from "@iconify/react";

@@ -1,35 +1,3 @@
-/**
- * Exit.jsx
- * --------
- * Página de registro de salida de vehículos del estacionamiento Carpe Diem.
- *
- * Layout:
- *   - Lado izquierdo: card con teclado virtual y campo de patente
- *   - Lado derecho:   panel de resumen (tiempo, categoría, costo) y botón confirmar
- *                     El panel cambia de estado según el flujo:
- *                     vacío → buscando → resumen → confirmado
- *
- * Flujo de registro:
- *   1. El operador ingresa la patente con el teclado virtual
- *   2. Al completar 8 caracteres, busca en "ingreso" el registro más reciente
- *      sin salida asociada para esa patente
- *   3. Calcula el tiempo transcurrido y el costo según la categoría del vehículo
- *   4. Muestra resumen: tiempo, categoría y costo total
- *   5. Al confirmar, inserta en la tabla "salida" y cierra el ingreso
- *
- * Lógica de tarifas (obtenida desde categoria_vehiculo):
- *   - Normal : mínimo $700 (primeros 30 min), luego $1400/hora proporcional
- *   - Grande : mínimo $1000 (primeros 35 min), luego $1600/hora proporcional
- *
- * Manejo de multi-visita:
- *   Siempre se busca el ingreso MÁS RECIENTE sin salida para esa patente.
- *   Si el auto estuvo ayer y vuelve hoy, el sistema cierra el ingreso correcto
- *   sin confusión, ya que linkea por id_ingreso.
- *
- * Modal de seguridad (botón "Volver"):
- *   Igual que Entrance: requiere contraseña del encargado para volver al dashboard.
- */
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Icon } from "@iconify/react";
