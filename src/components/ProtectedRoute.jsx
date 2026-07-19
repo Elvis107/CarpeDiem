@@ -1,32 +1,13 @@
-/**
- * ProtectedRoute.jsx
- * ------------------
- * Componente de guarda de rutas autenticadas.
- *
- * Verifica si existe una sesión activa en Supabase antes de renderizar
- * el contenido protegido. Si no hay sesión, redirige al login.
- *
- * Uso:
- *   <ProtectedRoute>
- *     <MiPagina />
- *   </ProtectedRoute>
- *
- * Estados posibles:
- *   - session === undefined → cargando (muestra spinner)
- *   - session === null      → sin sesión → redirige a /login
- *   - session válida        → renderiza children
- */
-
 import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 
 export default function ProtectedRoute({ children }) {
-  // undefined = aún verificando | null = sin sesión | objeto = sesión activa
+
   const [session, setSession] = useState(undefined);
 
   useEffect(() => {
-    // Obtiene la sesión actual desde Supabase al montar el componente
+   
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
     });

@@ -1,35 +1,3 @@
-/**
- * Exit.jsx
- * --------
- * Página de registro de salida de vehículos del estacionamiento Carpe Diem.
- *
- * Layout:
- *   - Lado izquierdo: card con teclado virtual y campo de patente
- *   - Lado derecho:   panel de resumen (tiempo, categoría, costo) y botón confirmar
- *                     El panel cambia de estado según el flujo:
- *                     vacío → buscando → resumen → confirmado
- *
- * Flujo de registro:
- *   1. El operador ingresa la patente con el teclado virtual
- *   2. Al completar 8 caracteres, busca en "ingreso" el registro más reciente
- *      sin salida asociada para esa patente
- *   3. Calcula el tiempo transcurrido y el costo según la categoría del vehículo
- *   4. Muestra resumen: tiempo, categoría y costo total
- *   5. Al confirmar, inserta en la tabla "salida" y cierra el ingreso
- *
- * Lógica de tarifas (obtenida desde categoria_vehiculo):
- *   - Normal : mínimo $700 (primeros 30 min), luego $1400/hora proporcional
- *   - Grande : mínimo $1000 (primeros 35 min), luego $1600/hora proporcional
- *
- * Manejo de multi-visita:
- *   Siempre se busca el ingreso MÁS RECIENTE sin salida para esa patente.
- *   Si el auto estuvo ayer y vuelve hoy, el sistema cierra el ingreso correcto
- *   sin confusión, ya que linkea por id_ingreso.
- *
- * Modal de seguridad (botón "Volver"):
- *   Igual que Entrance: requiere contraseña del encargado para volver al dashboard.
- */
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Icon } from "@iconify/react";
@@ -123,7 +91,6 @@ export default function Exit() {
       return;
     }
 
-    // ¿Ese ingreso ya tiene una salida registrada? (ej. reingresó el mismo auto)
     const { data: salidaExistente } = await supabase
       .from("salida")
       .select("id_salida")
@@ -148,8 +115,6 @@ export default function Exit() {
     setBuscado(false);
     setResultadoSalida(null);
   };
-
-  const isXL = (n) => [1, 2, 3, 17, 18, 19, 20].includes(n);
 
   const registrarSalida = async () => {
     if (!ingresoActivo) {
@@ -184,7 +149,6 @@ export default function Exit() {
       return;
     }
 
-    // Libera el espacio manualmente (el ESP32 también lo hará al no detectar el vehículo)
     await supabase
       .from("espacios")
       .update({
@@ -195,228 +159,468 @@ export default function Exit() {
       .eq("id_espacio", ingresoActivo.id_espacio);
 
     setResultadoSalida({ ...salida, minutos, costoTotal });
+    setTimeout(() => {
+      setPlate("");
+      setBuscado(false);
+      setIngresoActivo(null);
+      setResultadoSalida(null);
+    }, 3000);
     setLoading(false);
   };
 
+  const keyClass =
+    "flex h-14 items-center justify-center rounded-[22px] border border-slate-200 bg-white text-lg font-semibold text-slate-700 shadow-[0_10px_24px_-14px_rgba(15,23,42,0.14)] transition-all duration-150 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-[0_18px_28px_-16px_rgba(15,23,42,0.2)] active:translate-y-0 active:scale-[0.98] sm:h-16 sm:text-xl";
+
   return (
-    <div className="relative min-h-screen bg-[#edf3ef]">
-      {/* boton volver */}
-      <button
-        onClick={() => setShowModal(true)}
-        className="absolute top-8 left-8 z-20 flex items-center gap-2 bg-white px-6 py-3 rounded-2xl shadow-lg"
-      >
-        <Icon icon="mdi:arrow-left" />
-        Volver
-      </button>
-      <div className="flex min-h-screen">
-        {/* Card de salida del estacionamiento */}
-        <div className="w-full flex justify-center items-center px-12">
-          <div className="w-[470px] bg-white rounded-[36px] shadow-[0_20px_50px_rgba(0,0,0,0.08)] px-12 py-10">
-            <div className="flex justify-center mb-5">
-              <div className="w-20 h-20 rounded-full bg-red-100 flex items-center justify-center">
-                <Icon
-                  icon="mdi:boom-gate-up"
-                  className="text-[44px] text-red-600"
-                />
+    <div className="relative min-h-screen overflow-hidden bg-[#eef3ef] text-slate-900">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(16,185,129,0.16),_transparent_24%),radial-gradient(circle_at_top_right,_rgba(59,130,246,0.12),_transparent_28%),linear-gradient(180deg,_rgba(255,255,255,0.92),_rgba(238,243,239,1))]" />
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(148,163,184,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,0.05)_1px,transparent_1px)] bg-[size:34px_34px] opacity-40" />
+
+      <div className="relative mx-auto max-w-[3000px] px-4 py-5 sm:px-6 lg:px-8">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <button
+            onClick={() => setShowModal(true)}
+            className="inline-flex w-fit items-center gap-2 rounded-full border border-slate-200 bg-white/90 px-4 py-2.5 text-sm font-medium text-slate-600 shadow-[0_12px_30px_-18px_rgba(15,23,42,0.35)] backdrop-blur transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-300 hover:text-slate-900 hover:shadow-lg"
+          >
+            <Icon icon="mdi:arrow-left" className="text-lg" />
+            Volver
+          </button>
+
+          <div className="flex flex-wrap gap-2">
+            <span className="inline-flex items-center gap-2 rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">
+              <span className="h-2 w-2 rounded-full bg-emerald-500" />
+              Vista en tiempo real
+            </span>
+            <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-500 shadow-sm">
+              <Icon icon="mdi:map-marker-outline" className="text-sm" />
+              Operación activa
+            </span>
+          </div>
+        </div>
+
+        <div className="grid min-h-[calc(100vh-8.5rem)] gap-6 lg:grid-cols-2 xl:gap-8">
+          <div className="flex min-h-0 flex-col overflow-hidden rounded-none border border-slate-200/80 bg-white shadow-[0_24px_70px_-30px_rgba(15,23,42,0.16)]">
+            <div className="border-b border-slate-200/80 px-6 py-6 sm:px-8 bg-white">
+              <div className="flex items-start justify-between gap-6">
+                <div className="min-w-0">
+                  <div className="inline-flex items-center gap-2 rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-700">
+                    <span className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_0_4px_rgba(16,185,129,0.12)]" />
+                    Registro de salida
+                  </div>
+                  <h1 className="mt-4 text-4xl font-semibold tracking-tight text-slate-900 sm:text-5xl">
+                    Salida
+                  </h1>
+                  <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
+                    Ingresa la patente para localizar el ingreso activo,
+                    calcular la permanencia y cerrar la estadía.
+                  </p>
+                </div>
+                <div className="hidden shrink-0 rounded-none border border-slate-200 bg-slate-50 px-4 py-3 shadow-sm sm:block">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+                    Estado
+                  </p>
+                  <p className="mt-1 text-sm font-semibold text-slate-900">
+                    Proceso activo
+                  </p>
+                </div>
               </div>
             </div>
-            <div className="text-center mb-8">
-              <h1 className="text-5xl font-black text-slate-900 mb-2">
-                Salida
-              </h1>
-              <p className="text-sm text-gray-500">
-                Ingreso de patente para registro de salida
-              </p>
-            </div>
-            <div className="mb-6">
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Patente
-              </label>
-              <input
-                value={plate}
-                readOnly
-                placeholder="Ej: AA-BB-12"
-                className="w-full h-[55px] rounded-xl border-2 border-gray-200 bg-gray-50 px-4 text-lg outline-none"
-              />
-            </div>
-            <div className="flex flex-col gap-2 mb-6">
-              <div className="grid grid-cols-10 gap-1">
-                {row1.map((key) => (
-                  <button
-                    key={key}
-                    onClick={() => pressKey(key)}
-                    className="h-9 text-sm rounded bg-gray-100 hover:bg-gray-200 font-semibold"
-                  >
-                    {key}
-                  </button>
-                ))}
-              </div>
-              <div className="grid grid-cols-10 gap-1">
-                {row2.map((key) => (
-                  <button
-                    key={key}
-                    onClick={() => pressKey(key)}
-                    className="h-9 text-sm rounded bg-gray-100 hover:bg-gray-200 font-semibold"
-                  >
-                    {key}
-                  </button>
-                ))}
-              </div>
-              <div className="grid grid-cols-10 gap-1">
-                {row3.map((key) => (
-                  <button
-                    key={key}
-                    onClick={() => pressKey(key)}
-                    className="h-9 text-sm rounded bg-gray-100 hover:bg-gray-200 font-semibold"
-                  >
-                    {key}
-                  </button>
-                ))}
-              </div>
-              <div className="grid grid-cols-10 gap-1">
-                {row4.map((key) => (
-                  <button
-                    key={key}
-                    onClick={() => pressKey(key)}
-                    className="h-9 text-sm rounded bg-gray-100 hover:bg-gray-200 font-semibold"
-                  >
-                    {key}
-                  </button>
-                ))}
+
+            <div className="flex-1 min-h-0 px-4 py-4 sm:px-6 bg-white">
+              <div className="flex h-full min-h-0 flex-col gap-4">
+                <div className="rounded-none border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
+                      Patente
+                    </span>
+                    <span className="rounded-none border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] font-medium text-slate-500 shadow-sm">
+                      Formato: AA-BB-12
+                    </span>
+                  </div>
+                  <input
+                    value={plate}
+                    readOnly
+                    placeholder="AA-BB-12"
+                    className="h-32 w-full rounded-none border border-slate-200 bg-white px-6 text-center font-mono text-5xl font-bold tracking-[0.45em] text-slate-900 outline-none ring-1 ring-slate-200 placeholder:text-slate-300 sm:h-36 sm:text-6xl"
+                  />
+                </div>
+
+                <div className="rounded-none border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+                  <div className="grid gap-3">
+                    <div className="grid grid-cols-10 gap-3">
+                      {row1.map((key) => (
+                        <button key={key} onClick={() => pressKey(key)} className={keyClass}>
+                          {key}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="grid grid-cols-10 gap-3">
+                      {row2.map((key) => (
+                        <button key={key} onClick={() => pressKey(key)} className={keyClass}>
+                          {key}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="grid grid-cols-10 gap-3">
+                      {row3.map((key) => (
+                        <button key={key} onClick={() => pressKey(key)} className={keyClass}>
+                          {key}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="grid grid-cols-10 gap-3">
+                      {row4.map((key) => (
+                        <button key={key} onClick={() => pressKey(key)} className={keyClass}>
+                          {key}
+                        </button>
+                      ))}
+                      <button
+                        onClick={backspace}
+                        className="col-span-3 flex h-14 items-center justify-center gap-2 rounded-none border border-rose-200 bg-gradient-to-r from-rose-500 to-rose-600 text-sm font-semibold text-white shadow-[0_16px_30px_-16px_rgba(244,63,94,0.55)] transition-all duration-150 hover:-translate-y-0.5 hover:shadow-[0_22px_38px_-18px_rgba(244,63,94,0.65)] active:translate-y-0 active:scale-[0.98] sm:h-16 sm:text-base"
+                      >
+                        <Icon icon="mdi:backspace-outline" className="text-lg" />
+                        Borrar
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid gap-4 lg:grid-cols-2">
+                  {buscado && !ingresoActivo && !resultadoSalida && (
+                    <div className="rounded-none border border-emerald-200 bg-emerald-50 p-5 shadow-sm lg:col-span-2">
+                      <div className="flex items-start gap-4">
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700">
+                          <Icon icon="mdi:car-off" className="text-2xl" />
+                        </div>
+                        <div>
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-700">
+                            Vehículo no encontrado
+                          </p>
+                          <p className="mt-2 text-sm font-medium leading-6 text-slate-900">
+                            No se encontró un ingreso activo con esa patente.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {buscado && ingresoActivo && !resultadoSalida && (
+                    <div className="rounded-none border border-emerald-200 bg-emerald-50 p-5 shadow-sm lg:col-span-2">
+                      <div className="flex items-start gap-4">
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700">
+                          <Icon icon="mdi:check-circle-outline" className="text-2xl" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-700">
+                            Vehículo encontrado
+                          </p>
+                          <p className="mt-2 text-lg font-semibold text-slate-900">
+                            {ingresoActivo.vehiculo?.categoria_vehiculo?.nombre_categoria || "Vehículo"} · Espacio {ingresoActivo.id_espacio}
+                          </p>
+                          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                            <div className="rounded-2xl border border-emerald-100 bg-white px-4 py-4 shadow-sm">
+                              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+                                Permanencia
+                              </p>
+                              {(() => {
+                                const valorHora =
+                                  ingresoActivo.vehiculo?.categoria_vehiculo?.valor_hora || 0;
+                                const { minutos, segundos, costo } = calcularTiempoYCosto(
+                                  ingresoActivo.fecha_ingreso,
+                                  ingresoActivo.hora_ingreso,
+                                  valorHora,
+                                );
+                                const horas = Math.floor(minutos / 60);
+                                const mins = minutos % 60;
+                                return (
+                                  <>
+                                    <p className="mt-2 font-mono text-3xl font-bold tracking-[0.18em] text-slate-900">
+                                      {String(horas).padStart(2, "0")}:{String(mins).padStart(2, "0")}:{String(segundos).padStart(2, "0")}
+                                    </p>
+                                    <p className="mt-2 text-sm text-slate-500">
+                                      Tiempo total acumulado
+                                    </p>
+                                    <p className="mt-4 text-sm font-semibold text-emerald-700">
+                                      Costo estimado al cierre
+                                    </p>
+                                    <p className="mt-1 text-2xl font-black text-emerald-600">
+                                      ${costo.toLocaleString("es-CL")}
+                                    </p>
+                                  </>
+                                );
+                              })()}
+                            </div>
+
+                            <div className="rounded-2xl border border-emerald-100 bg-white px-4 py-4 shadow-sm">
+                              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+                                Estado de salida
+                              </p>
+                              <div className="mt-3 flex items-center gap-3">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
+                                  <Icon icon="mdi:parking" className="text-xl" />
+                                </div>
+                                <div>
+                                  <p className="text-sm font-semibold text-slate-900">
+                                    Listo para cerrar
+                                  </p>
+                                  <p className="text-sm text-slate-500">
+                                    El vehículo tiene un ingreso activo.
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="mt-5 rounded-2xl bg-slate-50 px-4 py-3">
+                                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+                                  Registro
+                                </p>
+                                <p className="mt-1 text-sm font-medium text-slate-700">
+                                  {ingresoActivo.fecha_ingreso} {ingresoActivo.hora_ingreso}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {resultadoSalida && (
+                    <div className="rounded-none border border-emerald-200 bg-emerald-50 p-5 shadow-sm lg:col-span-2">
+                      <div className="flex items-start gap-4">
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700">
+                          <Icon icon="mdi:check-decagram-outline" className="text-2xl" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-700">
+                            Salida registrada
+                          </p>
+                          <p className="mt-2 text-lg font-semibold text-slate-900">
+                            El vehículo salió correctamente del estacionamiento.
+                          </p>
+                          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                            <div className="rounded-2xl border border-emerald-100 bg-white px-4 py-4 shadow-sm">
+                              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+                                Tiempo total
+                              </p>
+                              <p className="mt-2 text-3xl font-black tracking-tight text-slate-900">
+                                {resultadoSalida.minutos} min
+                              </p>
+                              <p className="mt-2 text-sm text-slate-500">
+                                Permanencia total registrada
+                              </p>
+                            </div>
+                            <div className="rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-600 to-cyan-500 px-4 py-4 text-white shadow-[0_20px_40px_-22px_rgba(16,185,129,0.85)]">
+                              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/80">
+                                Costo total
+                              </p>
+                              <p className="mt-2 text-4xl font-black tracking-tight">
+                                ${resultadoSalida.costoTotal.toLocaleString("es-CL")}
+                              </p>
+                              <p className="mt-2 text-sm text-white/80">
+                                Cobro final por la estadía
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {error && (
+                    <div className="rounded-none border border-emerald-200 bg-emerald-50 p-5 shadow-sm lg:col-span-2">
+                      <div className="flex items-start gap-4">
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700">
+                          <Icon icon="mdi:alert-circle-outline" className="text-2xl" />
+                        </div>
+                        <div>
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-700">
+                            Error
+                          </p>
+                          <p className="mt-2 text-sm font-medium leading-6 text-slate-900">
+                            {error}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
                 <button
-                  onClick={backspace}
-                  className="col-span-3 h-9 rounded bg-red-100 hover:bg-red-200 text-sm font-bold"
+                  onClick={registrarSalida}
+                  disabled={loading || !ingresoActivo}
+                  className="flex h-16 w-full items-center justify-center gap-2 rounded-none bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 text-lg font-semibold text-white shadow-[0_18px_35px_-18px_rgba(16,185,129,0.8)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_24px_42px_-18px_rgba(16,185,129,0.9)] disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-white/90 disabled:opacity-100 disabled:shadow-none active:translate-y-0 active:scale-[0.99]"
                 >
-                  Borrar
+                  <Icon icon="mdi:exit-run" className="text-xl" />
+                  {loading ? "Registrando..." : "Registrar salida"}
                 </button>
               </div>
             </div>
+          </div>
 
-            {buscado && !ingresoActivo && !resultadoSalida && (
-              <div className="mb-4 bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-600">
-                No se encontró un ingreso activo con esa patente
+          <div className="flex min-h-0 flex-col gap-4 overflow-y-auto rounded-none border border-slate-200/80 bg-white p-5 shadow-[0_24px_70px_-30px_rgba(15,23,42,0.16)] sm:p-6">
+            <div className="rounded-none border border-slate-200 bg-slate-50 p-5">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
+                    Resumen de salida
+                  </p>
+                  <h3 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900">
+                    Información clave
+                  </h3>
+                </div>
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-900 text-white">
+                  <Icon icon="mdi:receipt-text-outline" className="text-2xl" />
+                </div>
               </div>
-            )}
 
-            {buscado && ingresoActivo && !resultadoSalida && (
-              <div className="mb-4 bg-blue-50 border border-blue-200 rounded-2xl px-5 py-4 text-sm text-blue-700">
-                <p className="font-semibold mb-2">
-                  {ingresoActivo.vehiculo?.categoria_vehiculo
-                    ?.nombre_categoria || "Vehículo"}{" "}
-                  — Espacio {ingresoActivo.id_espacio}
-                </p>
-                {(() => {
-                  const valorHora =
-                    ingresoActivo.vehiculo?.categoria_vehiculo?.valor_hora || 0;
-                  const { minutos, segundos, costo } = calcularTiempoYCosto(
-                    ingresoActivo.fecha_ingreso,
-                    ingresoActivo.hora_ingreso,
-                    valorHora,
-                  );
-                  const horas = Math.floor(minutos / 60);
-                  const mins = minutos % 60;
-                  return (
-                    <div className="flex justify-between items-center">
-                      <span className="text-2xl font-mono font-bold text-slate-800">
-                        {String(horas).padStart(2, "0")}:
-                        {String(mins).padStart(2, "0")}:
-                        {String(segundos).padStart(2, "0")}
-                      </span>
-                      <span className="text-xl font-bold text-emerald-700">
-                        ${costo.toLocaleString("es-CL")}
-                      </span>
+              <div className="mt-5 grid gap-3">
+                <div className="rounded-2xl border border-white bg-white px-4 py-4 shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
+                      <Icon icon="mdi:clock-outline" className="text-xl" />
                     </div>
-                  );
-                })()}
-              </div>
-            )}
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+                        Tiempo total
+                      </p>
+                      <p className="mt-1 text-lg font-semibold text-slate-900">
+                        {resultadoSalida ? `${resultadoSalida.minutos} min` : "—"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
 
-            {resultadoSalida && (
-              <div className="mb-4 bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-sm text-green-700 text-center">
-                ✓ Salida registrada — {resultadoSalida.minutos} min · $
-                {resultadoSalida.costoTotal.toLocaleString("es-CL")}
-              </div>
-            )}
+                <div className="rounded-none border border-white bg-gradient-to-br from-emerald-600 to-cyan-500 px-4 py-5 text-white shadow-[0_22px_45px_-24px_rgba(16,185,129,0.9)]">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white">
+                    Costo total
+                  </p>
+                  <div className="mt-2 flex items-end gap-2">
+                    <span className="text-sm font-semibold text-white">$</span>
+                    <span className="text-4xl font-black tracking-tight text-white">
+                      {resultadoSalida
+                        ? resultadoSalida.costoTotal.toLocaleString("es-CL")
+                        : "0"}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-sm text-white">
+                    El dato más importante de esta pantalla
+                  </p>
+                </div>
 
-            {error && (
-              <div className="mb-4 bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-600">
-                {error}
+                <div className="rounded-2xl border border-white bg-white px-4 py-4 shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-100 text-rose-700">
+                      <Icon icon="mdi:state-machine" className="text-xl" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+                        Estado de la salida
+                      </p>
+                      <p className="mt-1 text-lg font-semibold text-slate-900">
+                        {resultadoSalida
+                          ? "Salida completada"
+                          : ingresoActivo
+                            ? "Listo para registrar"
+                            : buscado
+                              ? "Sin ingreso activo"
+                              : "Esperando búsqueda"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
-            )}
+            </div>
 
-            <button
-              onClick={registrarSalida}
-              disabled={loading || !ingresoActivo}
-              className="w-full h-[55px] rounded-xl bg-red-500 hover:bg-red-600 disabled:bg-gray-300 text-white text-lg font-bold transition-all"
-            >
-              {loading ? "Registrando..." : "Registrar Salida"}
-            </button>
+            <div className="rounded-none border border-slate-200 bg-slate-50 p-5">
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-900 text-white">
+                  <Icon icon="mdi:keyboard-outline" className="text-2xl" />
+                </div>
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
+                    Interacción
+                  </p>
+                  <p className="mt-1 text-sm font-medium text-slate-700">
+                    El teclado virtual conserva exactamente el mismo comportamiento.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-none border border-slate-200 bg-slate-50 p-5">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
+                Patente digitada
+              </p>
+              <p className="mt-2 font-mono text-2xl font-bold tracking-[0.3em] text-slate-900">
+                {plate || "AA-BB-12"}
+              </p>
+            </div>
           </div>
         </div>
       </div>
-      {/* ventana emergente ingreso de contraseña para retroceso a la pagina */}
+
       {showModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-4">
-          <div className="bg-[#1e2633] w-full max-w-[450px] rounded-[28px] shadow-2xl border border-gray-700/40 p-10 pb-12 flex flex-col items-center justify-center text-center transform transition-all">
-            <div className="w-16 h-16 rounded-2xl bg-[#00b4d8]/10 flex items-center justify-center border border-[#00b4d8]/20 mb-4">
-              <Icon
-                icon="mdi:lock-outline"
-                className="text-[#00b4d8] text-3xl"
-              />
-            </div>
-            <h2 className="text-3xl font-bold text-white tracking-wide mb-2">
-              Confirmación
-            </h2>
-            <p className="text-gray-400 text-sm leading-relaxed mb-8 max-w-[320px]">
-              Ingresa tu contraseña para volver a la pagina encargado
-            </p>
-            <div className="w-full max-w-[350px] flex flex-col gap-5">
-              <div className="relative w-full">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Contraseña"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-[#161b26] text-white placeholder-gray-500 py-3.5 pl-5 pr-12 rounded-xl border border-gray-700/60 focus:outline-none focus:border-[#00b4d8] focus:ring-2 focus:ring-[#00b4d8]/20 transition-all text-base"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition p-1"
-                >
-                  <Icon
-                    icon={
-                      showPassword ? "mdi:eye-off-outline" : "mdi:eye-outline"
-                    }
-                    className="text-xl"
-                  />
-                </button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-xl">
+          <div className="relative w-full max-w-[520px] overflow-hidden rounded-[32px] border border-white/10 bg-slate-950 shadow-[0_30px_100px_-35px_rgba(0,0,0,0.8)]">
+            <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-cyan-400 via-emerald-400 to-blue-500" />
+            <div className="px-8 pb-10 pt-12 text-center sm:px-10">
+              <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-3xl border border-cyan-400/20 bg-cyan-400/10 text-cyan-300">
+                <Icon icon="mdi:lock-outline" className="text-3xl" />
               </div>
-              {error && (
-                <div className="bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl p-3 text-sm text-center">
-                  {error}
+              <h2 className="text-3xl font-semibold tracking-tight text-white">
+                Confirmación
+              </h2>
+              <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-slate-400">
+                Ingresa tu contraseña para volver a la página del encargado.
+              </p>
+
+              <div className="mt-8 space-y-5 text-left">
+                <div className="relative w-full">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Contraseña"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full rounded-2xl border border-white/10 bg-white/5 py-4 pl-5 pr-14 text-base text-white outline-none placeholder:text-slate-500 focus:border-cyan-400/50 focus:ring-4 focus:ring-cyan-400/10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 rounded-xl p-2 text-slate-400 transition hover:bg-white/5 hover:text-white"
+                  >
+                    <Icon
+                      icon={showPassword ? "mdi:eye-off-outline" : "mdi:eye-outline"}
+                      className="text-xl"
+                    />
+                  </button>
                 </div>
-              )}
-              <div className="flex gap-4 w-full pt-1">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowModal(false);
-                    setPassword("");
-                    setError("");
-                  }}
-                  className="flex-1 py-3.5 rounded-xl text-gray-300 bg-transparent border border-gray-600/70 hover:bg-white/5 hover:text-white transition-all font-medium text-base"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="button"
-                  onClick={verifyPassword}
-                  disabled={loading}
-                  className="flex-1 py-3.5 rounded-xl text-white font-semibold bg-[#00b4d8] hover:bg-[#0096b4] disabled:bg-gray-700 disabled:text-gray-400 shadow-lg shadow-[#00b4d8]/20 transition-all text-base"
-                >
-                  {loading ? "Validando..." : "Confirmar"}
-                </button>
+
+                {error && (
+                  <div className="rounded-2xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-300">
+                    {error}
+                  </div>
+                )}
+
+                <div className="grid grid-cols-2 gap-4">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowModal(false);
+                      setPassword("");
+                      setError("");
+                    }}
+                    className="rounded-2xl border border-white/10 bg-white/5 py-3.5 text-sm font-medium text-slate-300 transition hover:bg-white/10 hover:text-white"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={verifyPassword}
+                    disabled={loading}
+                    className="rounded-2xl bg-gradient-to-r from-cyan-500 to-emerald-500 py-3.5 text-sm font-semibold text-white shadow-[0_18px_36px_-18px_rgba(6,182,212,0.75)] transition hover:-translate-y-0.5 hover:shadow-[0_24px_42px_-20px_rgba(6,182,212,0.85)] disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {loading ? "Validando..." : "Confirmar"}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
