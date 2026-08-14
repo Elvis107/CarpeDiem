@@ -69,9 +69,33 @@ export default function Login() {
   };
 
   return (
+
     <div className="login-container">
       <div className="login-glow-cyan" />
       <div className="login-glow-indigo" />
+      <button
+        type="button"
+        onClick={() => navigate("/")}
+        style={{
+          position: "absolute",
+          top: "20px",
+          left: "20px",
+          width: "42px",
+          height: "42px",
+          border: "none",
+          borderRadius: "10px",
+          background: "#ffffff",
+          boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)",
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 1000,
+        }}
+        aria-label="Volver"
+      >
+        <Icon icon="mdi:arrow-left" width="24" height="24" />
+      </button>
 
       <div className="login-box">
         <p className="login-eyebrow">Gestión de estacionamiento · Tiempo real</p>

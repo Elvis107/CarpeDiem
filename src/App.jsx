@@ -1,16 +1,16 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Entrance from "./pages/Entrance";
 import Exit from "./pages/Exit";
 import ProtectedRoute from "./components/ProtectedRoute";
+import ParkingInfo from "./pages/ParkingInfo";
 
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-
-        <Route path="/" element={<Navigate to="/login" />} />
+        <Route path="/" element={<ParkingInfo />} />
 
         <Route path="/login" element={<Login />} />
 
@@ -40,7 +40,6 @@ export default function App() {
             </ProtectedRoute>
           }
         />
-
       </Routes>
     </BrowserRouter>
   );
