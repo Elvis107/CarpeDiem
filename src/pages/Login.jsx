@@ -12,6 +12,7 @@ export default function Login() {
   const [recoverSent, setRecoverSent] = useState(false);
   const [emailError, setEmailError] = useState("");
   const [passError, setPassError] = useState("");
+  const [remember, setRemember] = useState(false);
 
   // Controla la visibilidad de la contraseña
   const [showPassword, setShowPassword] = useState(false);
@@ -69,134 +70,168 @@ export default function Login() {
   };
 
   return (
+    <div className="cd-login">
+      <div className="cd-login__card">
+        {/* Panel izquierdo: visual */}
+        <div className="cd-login__visual">
+          <div className="cd-login__visual-overlay" />
 
-    <div className="login-container">
-      <div className="login-glow-cyan" />
-      <div className="login-glow-indigo" />
-      <button
-        type="button"
-        onClick={() => navigate("/")}
-        style={{
-          position: "absolute",
-          top: "20px",
-          left: "20px",
-          width: "42px",
-          height: "42px",
-          border: "none",
-          borderRadius: "10px",
-          background: "#ffffff",
-          boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)",
-          cursor: "pointer",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          zIndex: 1000,
-        }}
-        aria-label="Volver"
-      >
-        <Icon icon="mdi:arrow-left" width="24" height="24" />
-      </button>
+          <div className="cd-login__sign">
+            <span>P</span>
+          </div>
 
-      <div className="login-box">
-        <p className="login-eyebrow">Gestión de estacionamiento · Tiempo real</p>
-        <h1>Carpe Diem</h1>
-        <p className="login-subtitle">Ingresa para monitorear tus plazas</p>
+          <div className="cd-login__level">
+            <span className="cd-login__level-label">NIVEL</span>
+            <span className="cd-login__level-number">2</span>
+          </div>
 
-        {/* Firma visual: franja de sensores de plaza (ESP32 / HC-SR04) */}
-        <div className="sensor-strip" aria-hidden="true">
-          <span className="sensor-strip__slot" />
-          <span className="sensor-strip__slot" />
-          <span className="sensor-strip__slot sensor-strip__slot--active" />
-          <span className="sensor-strip__slot" />
-          <span className="sensor-strip__slot" />
+          <div className="cd-login__exit">
+            SALIDA <Icon icon="mdi:arrow-right" />
+          </div>
+
+          <div className="cd-login__stripe" aria-hidden="true" />
+
+          <div className="cd-login__badge">
+            <span className="cd-login__badge-icon">
+              <Icon icon="mdi:car" />
+            </span>
+            <div>
+              <strong>Sistema inteligente</strong>
+              <div>de estacionamiento</div>
+            </div>
+          </div>
         </div>
 
-        {recoverSent && (
-          <div className="banner-success">
-            <svg xmlns="http://www.w3.org/2000/svg" style={{ width: 16, height: 16, flexShrink: 0 }} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+        {/* Panel derecho: formulario */}
+        <div className="cd-login__form">
+          <button
+            type="button"
+            onClick={() => navigate("/")}
+            className="cd-login__back"
+            aria-label="Volver"
+          >
+            <Icon icon="mdi:arrow-left" width="20" height="20" />
+          </button>
+
+          <div className="cd-login__logo">
+            <svg viewBox="0 0 220 46" className="cd-login__logo-swoosh" aria-hidden="true">
+              <path
+                d="M10 34 C 55 34, 70 12, 110 10 C 150 8, 165 20, 210 20"
+                fill="none"
+                stroke="var(--cd-yellow)"
+                strokeWidth="3"
+                strokeLinecap="round"
+              />
             </svg>
-            Si el correo existe recibirás un enlace de recuperación.
+            <h1 className="cd-login__wordmark">
+              CARPE<span>DIEM</span>
+            </h1>
+            <p className="cd-login__tagline">
+              <span className="cd-login__tagline-line" />
+              SISTEMA DE ESTACIONAMIENTO
+              <span className="cd-login__tagline-line" />
+            </p>
           </div>
-        )}
 
-        {error && <div className="banner-error">{error}</div>}
+          <h2 className="cd-login__welcome">Bienvenido</h2>
+          <p className="cd-login__subtitle">Inicia sesión para continuar</p>
 
-        {/* Campo: Correo */}
-        <div className="field">
-          <div className="field-wrap">
-            <span className="field-icon-leading">
-              <Icon icon="mdi:email-outline" width="18" height="18" />
-            </span>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={e => {
-                setEmail(e.target.value);
-                if (validateEmail(e.target.value)) setEmailError("");
-              }}
-              placeholder="Correo electrónico"
-              autoComplete="email"
-              className={emailError ? "input-error" : ""}
-            />
+          {recoverSent && (
+            <div className="cd-login__banner cd-login__banner--success">
+              <Icon icon="mdi:check-circle-outline" width="16" height="16" />
+              Si el correo existe recibirás un enlace de recuperación.
+            </div>
+          )}
+
+          {error && <div className="cd-login__banner cd-login__banner--error">{error}</div>}
+
+          {/* Campo: Usuario */}
+          <div className="cd-login__field">
+            <label htmlFor="email">Usuario</label>
+            <div className={`cd-login__field-wrap ${emailError ? "cd-login__field-wrap--error" : ""}`}>
+              <Icon icon="mdi:account-outline" width="18" height="18" />
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (validateEmail(e.target.value)) setEmailError("");
+                }}
+                placeholder="Ingresa tu usuario"
+                autoComplete="email"
+              />
+            </div>
+            {emailError && <p className="cd-login__error-msg">{emailError}</p>}
           </div>
-          {emailError && <p className="error-msg">{emailError}</p>}
-        </div>
 
-        {/* Campo: Contraseña con ojo interactivo */}
-        <div className="field">
-          <div className="field-wrap">
-            <span className="field-icon-leading">
+          {/* Campo: Contraseña */}
+          <div className="cd-login__field">
+            <label htmlFor="password">Contraseña</label>
+            <div className={`cd-login__field-wrap ${passError ? "cd-login__field-wrap--error" : ""}`}>
               <Icon icon="mdi:lock-outline" width="18" height="18" />
-            </span>
-            <input
-              id="password"
-              type={showPassword ? "text" : "password"}
-              data-has-toggle="true"
-              value={password}
-              onChange={e => {
-                setPassword(e.target.value);
-                if (e.target.value.trim()) setPassError("");
-              }}
-              placeholder="Contraseña"
-              autoComplete="current-password"
-              className={passError ? "input-error" : ""}
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="field-icon-trailing"
-              aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
-            >
-              <Icon icon={showPassword ? "mdi:eye-off-outline" : "mdi:eye-outline"} width="20" height="20" />
+              <input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  if (e.target.value.trim()) setPassError("");
+                }}
+                placeholder="Ingresa tu contraseña"
+                autoComplete="current-password"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="cd-login__field-toggle"
+                aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+              >
+                <Icon icon={showPassword ? "mdi:eye-off-outline" : "mdi:eye-outline"} width="20" height="20" />
+              </button>
+            </div>
+            {passError && <p className="cd-login__error-msg">{passError}</p>}
+          </div>
+
+          {/* Opciones adicionales */}
+          <div className="cd-login__row-options">
+            <label className="cd-login__remember">
+              <input
+                type="checkbox"
+                checked={remember}
+                onChange={(e) => setRemember(e.target.checked)}
+              />
+              Recuérdame
+            </label>
+            <button type="button" className="cd-login__forgot" onClick={handleRecover}>
+              ¿Olvidaste tu contraseña?
             </button>
           </div>
-          {passError && <p className="error-msg">{passError}</p>}
-        </div>
 
-        {/* Opciones adicionales */}
-        <div className="row-options">
-          <label>
-            <input type="checkbox" />
-            Recuérdame
-          </label>
-          <button type="button" className="btn-forgot" onClick={handleRecover}>
-            ¿Olvidaste tu contraseña?
+          {/* Botón de envío */}
+          <button className="cd-login__submit" onClick={handleLogin} disabled={loading}>
+            {loading ? (
+              <>
+                <Icon icon="mdi:loading" className="cd-login__spin" width="20" height="20" />
+                <span>Ingresando…</span>
+              </>
+            ) : (
+              <>
+                <Icon icon="mdi:login-variant" width="18" height="18" />
+                <span>INICIAR SESIÓN</span>
+              </>
+            )}
           </button>
-        </div>
 
-        {/* Botón de envío */}
-        <button className="btn-primary" onClick={handleLogin} disabled={loading}>
-          {loading ? (
-            <>
-              <Icon icon="mdi:loading" className="animate-spin" width="20" height="20" />
-              <span>Ingresando…</span>
-            </>
-          ) : (
-            <span>Ingresar</span>
-          )}
-        </button>
+          <div className="cd-login__footer">
+            <span className="cd-login__footer-line" />
+            <span className="cd-login__footer-badge">P</span>
+            <span className="cd-login__footer-line" />
+          </div>
+          <p className="cd-login__footer-text">
+            MÁS CONTROL <span>|</span> MÁS SEGURIDAD <span>|</span> MÁS EFICIENCIA
+          </p>
+        </div>
       </div>
     </div>
   );

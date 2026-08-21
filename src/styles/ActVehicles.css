@@ -1,0 +1,374 @@
+.cd-act {
+  background-color: #f8fafc;
+}
+
+.cd-act__header {
+  border-bottom: 1px solid #e2e8f0;
+  background: #fff;
+}
+
+.cd-act__live-dot {
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: 999px;
+  background: var(--cd-green);
+  animation: cd-act-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes cd-act-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.cd-act__live-label {
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: #16a34a;
+}
+
+.cd-act__title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--cd-black);
+}
+
+@media (min-width: 576px) {
+  .cd-act__title {
+    font-size: 1.9rem;
+  }
+}
+
+.cd-act__subtitle {
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+/* ---------- Tarjetas de estadísticas ---------- */
+.cd-act__stats-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .cd-act__stats-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.cd-act__stat-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1rem;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  padding: 1.25rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  transition: box-shadow 0.3s ease;
+}
+
+.cd-act__stat-card:hover {
+  box-shadow: 0 10px 25px -10px rgba(0, 0, 0, 0.15);
+}
+
+.cd-act__stat-card--money {
+  border-color: rgba(34, 197, 94, 0.25);
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.06), #fff);
+}
+
+.cd-act__stat-blob {
+  position: absolute;
+  right: -1.5rem;
+  top: -1.5rem;
+  width: 6rem;
+  height: 6rem;
+  border-radius: 999px;
+  transition: transform 0.5s ease;
+}
+
+.cd-act__stat-card:hover .cd-act__stat-blob {
+  transform: scale(1.5);
+}
+
+.cd-act__stat-blob--info {
+  background: rgba(250, 204, 21, 0.14);
+}
+
+.cd-act__stat-blob--money {
+  background: rgba(34, 197, 94, 0.12);
+}
+
+.cd-act__stat-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #64748b;
+}
+
+.cd-act__stat-label--money {
+  color: #15803d;
+}
+
+.cd-act__stat-value {
+  margin-top: 0.5rem;
+  font-size: 1.9rem;
+  font-weight: 800;
+  color: var(--cd-black);
+}
+
+.cd-act__stat-value--money {
+  color: #16a34a;
+}
+
+.cd-act__stat-hint {
+  margin-top: 0.25rem;
+  font-size: 0.72rem;
+  color: #94a3b8;
+}
+
+.cd-act__stat-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 1rem;
+  font-size: 1.4rem;
+  transition: transform 0.3s ease;
+}
+
+.cd-act__stat-card:hover .cd-act__stat-icon {
+  transform: scale(1.1);
+}
+
+.cd-act__stat-icon--info {
+  background: rgba(250, 204, 21, 0.16);
+  color: #92700a;
+}
+
+.cd-act__stat-icon--money {
+  background: rgba(34, 197, 94, 0.15);
+  color: #16a34a;
+}
+
+/* ---------- Estados vacío / cargando ---------- */
+.cd-act__spin {
+  font-size: 2.2rem;
+  color: #94a3b8;
+  animation: cd-act-spin 0.9s linear infinite;
+}
+
+@keyframes cd-act-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.cd-act__empty-text {
+  color: #94a3b8;
+  font-size: 0.85rem;
+}
+
+.cd-act__empty-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 5rem;
+  height: 5rem;
+  margin: 0 auto;
+  border-radius: 1.5rem;
+  background: #f1f5f9;
+  color: #94a3b8;
+  font-size: 2.2rem;
+}
+
+.cd-act__empty-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+/* ---------- Grid de tarjetas de vehículos ---------- */
+.cd-act__cards-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.1rem;
+}
+
+@media (min-width: 992px) {
+  .cd-act__cards-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (min-width: 1280px) {
+  .cd-act__cards-grid {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+}
+
+.cd-act__card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.5rem;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.cd-act__card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 35px -15px rgba(0, 0, 0, 0.2);
+}
+
+.cd-act__card-bar {
+  height: 0.35rem;
+  width: 100%;
+  background: linear-gradient(
+    90deg,
+    var(--cd-green),
+    #4ade80,
+    var(--cd-yellow)
+  );
+}
+
+.cd-act__card-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  flex-shrink: 0;
+  border-radius: 1rem;
+  background: var(--cd-black);
+  color: #fff;
+  font-size: 1.4rem;
+}
+
+.cd-act__card-label {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+  color: #94a3b8;
+}
+
+.cd-act__card-plate {
+  margin-top: 0.25rem;
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: var(--cd-black);
+}
+
+.cd-act__badge-active {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: 999px;
+  background: rgba(34, 197, 94, 0.1);
+  padding: 0.25rem 0.65rem;
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #16a34a;
+}
+
+.cd-act__badge-dot {
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 999px;
+  background: var(--cd-green);
+  animation: cd-act-pulse 1.6s ease-in-out infinite;
+}
+
+.cd-act__card-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.cd-act__card-tile {
+  border-radius: 1rem;
+  background: #f8fafc;
+  padding: 0.75rem;
+}
+
+.cd-act__card-tile-head {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: #94a3b8;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+}
+
+.cd-act__card-tile-value {
+  margin-top: 0.4rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #334155;
+}
+
+.cd-act__card-tile-value--mono {
+  font-family: "Courier New", monospace;
+}
+
+.cd-act__cost-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: 1rem;
+  background: rgba(34, 197, 94, 0.08);
+  padding: 1rem;
+}
+
+.cd-act__cost-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.75rem;
+  background: rgba(34, 197, 94, 0.15);
+  color: #16a34a;
+  font-size: 1.25rem;
+}
+
+.cd-act__cost-label {
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #15803d;
+}
+
+.cd-act__cost-hint {
+  font-size: 0.72rem;
+  color: rgba(21, 128, 61, 0.7);
+}
+
+.cd-act__cost-value {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #16a34a;
+}

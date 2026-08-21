@@ -1,0 +1,135 @@
+.cd-sidebar {
+  width: 16rem;
+  height: 100vh;
+  background-color: var(--cd-black);
+  transition: width 0.3s ease;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
+}
+
+.cd-sidebar--collapsed {
+  width: 5rem;
+}
+
+.cd-sidebar__header {
+  background-color: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.cd-sidebar__toggle {
+  color: rgba(255, 255, 255, 0.5) !important;
+  border: none;
+  background: transparent;
+}
+
+.cd-sidebar__toggle:hover {
+  color: var(--cd-yellow) !important;
+}
+
+.cd-sidebar__avatar {
+  width: 4rem;
+  height: 4rem;
+  background-color: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+.cd-sidebar__role {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.cd-sidebar__section-title {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: rgba(255, 255, 255, 0.4);
+  padding: 0 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.cd-sidebar__divider {
+  border-color: rgba(255, 255, 255, 0.08);
+  margin: 1rem 0;
+}
+
+/* Botones de acceso rápido (Entrada / Salida) */
+.cd-sidebar__quick-btn {
+  border-radius: 0.9rem;
+  padding: 0.65rem 1rem;
+  font-weight: 600;
+  color: #fff !important;
+  border: none;
+  transition: transform 0.15s ease, filter 0.2s ease;
+}
+
+.cd-sidebar__quick-btn:hover {
+  filter: brightness(1.08);
+  color: #fff !important;
+}
+
+.cd-sidebar__quick-btn:active {
+  transform: scale(0.97);
+}
+
+.cd-sidebar__quick-btn--in {
+  background-color: var(--cd-green);
+}
+
+.cd-sidebar__quick-btn--out {
+  background-color: var(--cd-red);
+}
+
+/* Botones de navegación (Mapa, Vehículos, Reportes, Historial) */
+.cd-sidebar__nav-btn {
+  border-radius: 0.9rem;
+  padding: 0.6rem 0.75rem;
+  color: rgba(255, 255, 255, 0.7) !important;
+  border: none;
+  background: transparent;
+  text-align: left;
+  transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.cd-sidebar__nav-btn:hover {
+  color: #fff !important;
+  background-color: rgba(255, 255, 255, 0.06);
+  transform: translateX(2px);
+}
+
+/* Botón de cerrar sesión */
+.cd-sidebar__logout-btn {
+  border-radius: 0.9rem;
+  padding: 0.6rem 0.75rem;
+  color: var(--cd-red) !important;
+  border: none;
+  background: transparent;
+  text-align: left;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.cd-sidebar__logout-btn:hover {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: var(--cd-red) !important;
+  transform: translateX(2px);
+}
+
+/* Cajas de íconos */
+.cd-sidebar__icon-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.65rem;
+  background-color: rgba(255, 255, 255, 0.12);
+  flex-shrink: 0;
+}
+
+.cd-sidebar__icon-box--accent {
+  background-color: rgba(250, 204, 21, 0.15);
+  color: var(--cd-yellow);
+}
+
+.cd-sidebar__icon-box--danger {
+  background-color: rgba(239, 68, 68, 0.15);
+  color: var(--cd-red);
+}

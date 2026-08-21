@@ -23,6 +23,7 @@ import UltimoMovimiento from "../components/lastmove";
 import VehiculosActivosModal from "../components/ActVehicles";
 import HistorialReportes from "../components/HistorialReportes";
 import Reportes from "../components/Reportes";
+import "../styles/Dashboard.css";
 
 export default function Dashboard() {
   const [lastIngreso, setLastIngreso] = useState(null);
@@ -184,19 +185,20 @@ export default function Dashboard() {
 
   }, [sonidoActivo]);
 
-  return (
-    <div className="relative flex h-screen overflow-hidden bg-[#eef3ef] text-slate-900">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(16,185,129,0.12),_transparent_28%),radial-gradient(circle_at_top_right,_rgba(14,165,233,0.10),_transparent_30%),linear-gradient(180deg,_rgba(255,255,255,0.9),_rgba(238,243,239,1))]" />
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(148,163,184,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,0.04)_1px,transparent_1px)] bg-[size:36px_36px] opacity-40" />
+  const seccionAlterna = showActivosModal || showHistorial || showReportes;
 
-      <div className="relative z-20 shrink-0">
+  return (
+    <div className="cd-dash position-relative d-flex vh-100 overflow-hidden">
+      <div className="cd-dash__bg-glow" />
+      <div className="cd-dash__bg-grid" />
+
+      <div className="position-relative z-2 flex-shrink-0">
         <Sidebar
           onOpenMapa={() => {
             setShowActivosModal(false);
             setShowHistorial(false);
             setShowReportes(false);
           }}
-
           onOpenVehiculosServicio={() => {
             setShowActivosModal((v) => !v);
             setShowHistorial(false);
@@ -215,53 +217,48 @@ export default function Dashboard() {
         />
       </div>
 
-      <div className="relative z-10 flex-1 min-w-0 h-screen flex flex-col px-3 py-3 sm:px-5 lg:px-6 lg:py-4">
-        <div className="mb-3 flex items-center justify-between gap-4 rounded-[28px] border border-slate-200/80 bg-white/85 px-4 py-3 shadow-[0_16px_40px_-24px_rgba(15,23,42,0.2)] backdrop-blur">
-          <div className="group min-w-0">
-            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-700 transition-all duration-300 group-hover:border-emerald-200 group-hover:bg-emerald-100">
-              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse transition-transform duration-300 group-hover:scale-125" />
+      <div className="position-relative z-1 flex-grow-1 min-w-0 vh-100 d-flex flex-column px-3 py-3 px-lg-4 py-lg-3">
+        {/* Header */}
+        <div className="cd-dash__header d-flex align-items-center justify-content-between gap-4 mb-3">
+          <div className="cd-dash__title-group min-w-0">
+            <div className="cd-dash__badge d-inline-flex align-items-center gap-2">
+              <span className="cd-dash__badge-dot" />
               Centro de control
             </div>
 
-            <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 transition-all duration-300 group-hover:text-emerald-700 sm:text-[2.5rem]">
-              ESTACIONAMIENTO CARPEDIEM
-            </h1>
-            <div className="mt-4 h-1 w-16 rounded-full bg-emerald-500 transition-all duration-500 group-hover:w-28" />
+            <h1 className="cd-dash__title mt-3 mb-0">ESTACIONAMIENTO CARPEDIEM</h1>
+            <div className="cd-dash__title-bar mt-3" />
           </div>
 
           <button
             onClick={() => setSonidoActivo((s) => !s)}
-            className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-600 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-300 hover:text-slate-900 hover:shadow-md"
+            className="cd-dash__sound-btn btn d-inline-flex align-items-center gap-2"
             title={sonidoActivo ? "Silenciar notificaciones" : "Activar notificaciones"}
           >
-            <Icon
-              icon={sonidoActivo ? "mdi:volume-high" : "mdi:volume-off"}
-              className="text-xl"
-            />
+            <Icon icon={sonidoActivo ? "mdi:volume-high" : "mdi:volume-off"} className="fs-5" />
             {sonidoActivo ? "Sonido activo" : "Silenciado"}
           </button>
         </div>
 
-        <div className="flex-1 min-h-0 flex gap-4 xl:gap-5">
-          <div className="flex-1 min-w-0 flex flex-col">
-            {!showActivosModal && !showHistorial && !showReportes && (
-              <div className="mb-2 flex items-center justify-between gap-3 px-1">
+        {/* Contenido */}
+        <div className="flex-grow-1 min-h-0 d-flex gap-4">
+          <div className="flex-grow-1 min-w-0 d-flex flex-column">
+            {!seccionAlterna && (
+              <div className="mb-2 d-flex align-items-center justify-content-between gap-3 px-1">
                 <div>
-                  <h2 className="text-lg font-semibold text-slate-900 sm:text-xl">
-                    Mapa del estacionamiento
-                  </h2>
-                  <p className="text-sm text-slate-500">
+                  <h2 className="cd-dash__section-title mb-0">Mapa del estacionamiento</h2>
+                  <p className="cd-dash__section-subtitle mb-0">
                     Haz clic en un espacio para cambiar su estado manualmente
                   </p>
                 </div>
-                <div className="hidden items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400 md:inline-flex">
-                  <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                <div className="cd-dash__live-pill d-none d-md-inline-flex align-items-center gap-2">
+                  <span className="cd-dash__live-dot" />
                   Vista en vivo
                 </div>
               </div>
             )}
 
-            <div className="flex-1 min-h-0 min-w-0">
+            <div className="flex-grow-1 min-h-0 min-w-0">
               {showActivosModal ? (
                 <VehiculosActivosModal onClose={() => setShowActivosModal(false)} />
               ) : showHistorial ? (
@@ -269,43 +266,39 @@ export default function Dashboard() {
               ) : showReportes ? (
                 <Reportes onClose={() => setShowReportes(false)} />
               ) : (
-                <div className="h-full min-h-[calc(100vh-180px)] overflow-hidden rounded-[30px] border border-slate-200/80 bg-white shadow-[0_24px_70px_-30px_rgba(15,23,42,0.18)]">
-                  <div className="h-full min-h-0 p-0">
+                <div className="cd-dash__map-card h-100">
+                  <div className="h-100 min-h-0 p-0">
                     <ParkingMap onSpotClick={handleSpotClick} />
                   </div>
                 </div>
               )}
             </div>
 
-            {!showActivosModal && !showHistorial && !showReportes && (
-              <p className="pt-3 text-center text-sm text-slate-400">
+            {!seccionAlterna && (
+              <p className="cd-dash__footnote pt-3 mb-0 text-center">
                 Operación continua y cambios en tiempo real.
               </p>
             )}
           </div>
 
-          {!showActivosModal && !showHistorial && !showReportes && (
-            <aside className="w-[340px] shrink-0 h-full flex flex-col gap-4 overflow-y-auto rounded-[30px] border border-slate-200/80 bg-white/85 p-4 shadow-[0_24px_70px_-30px_rgba(15,23,42,0.16)] backdrop-blur">
-              <div className="rounded-[26px] bg-emerald-50/80 border border-emerald-100 p-3.5 shadow-sm transition-transform duration-200 hover:-translate-y-0.5">
-                <div className="mb-3 flex items-center gap-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
-                    <Icon icon="mdi:car-arrow-right" className="text-base" />
+          {!seccionAlterna && (
+            <aside className="cd-dash__aside flex-shrink-0 h-100 d-flex flex-column gap-3 overflow-auto p-3">
+              <div className="cd-dash__stat-card cd-dash__stat-card--in p-3">
+                <div className="mb-3 d-flex align-items-center gap-2">
+                  <div className="cd-dash__stat-icon cd-dash__stat-icon--in">
+                    <Icon icon="mdi:car-arrow-right" />
                   </div>
-                  <h2 className="text-[11px] font-bold text-emerald-700 tracking-[0.18em] uppercase">
-                    Último ingreso
-                  </h2>
+                  <h2 className="cd-dash__stat-title cd-dash__stat-title--in mb-0">Último ingreso</h2>
                 </div>
                 <UltimoMovimiento tipo="ingreso" data={lastIngreso} />
               </div>
 
-              <div className="rounded-[26px] bg-rose-50/80 border border-rose-100 p-3.5 shadow-sm transition-transform duration-200 hover:-translate-y-0.5">
-                <div className="mb-3 flex items-center gap-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-rose-100 text-rose-700">
-                    <Icon icon="mdi:car-arrow-left" className="text-base" />
+              <div className="cd-dash__stat-card cd-dash__stat-card--out p-3">
+                <div className="mb-3 d-flex align-items-center gap-2">
+                  <div className="cd-dash__stat-icon cd-dash__stat-icon--out">
+                    <Icon icon="mdi:car-arrow-left" />
                   </div>
-                  <h2 className="text-[11px] font-bold text-rose-600 tracking-[0.18em] uppercase">
-                    Último egreso
-                  </h2>
+                  <h2 className="cd-dash__stat-title cd-dash__stat-title--out mb-0">Último egreso</h2>
                 </div>
                 <UltimoMovimiento tipo="egreso" data={lastEgreso} />
               </div>

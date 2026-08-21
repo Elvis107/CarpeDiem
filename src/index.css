@@ -1,1 +1,39 @@
-@import "tailwindcss";
+@import "bootstrap/dist/css/bootstrap.min.css";
+
+/* Paleta CarpeDiem — Negro + Amarillo */
+:root {
+  --cd-black: #111827;
+  --cd-yellow: #FACC15;
+  --cd-white: #FFFFFF;
+  --cd-green: #22C55E;
+  --cd-red: #EF4444;
+
+  /* Override de variables de Bootstrap 5.3 */
+  --bs-primary: var(--cd-black);
+  --bs-primary-rgb: 17, 24, 39;
+
+  --bs-warning: var(--cd-yellow);
+  --bs-warning-rgb: 250, 204, 21;
+
+  --bs-success: var(--cd-green);
+  --bs-success-rgb: 34, 197, 94;
+
+  --bs-danger: var(--cd-red);
+  --bs-danger-rgb: 239, 68, 68;
+
+  --bs-dark: var(--cd-black);
+  --bs-dark-rgb: 17, 24, 39;
+
+  --bs-light: var(--cd-white);
+  --bs-light-rgb: 255, 255, 255;
+
+  --bs-body-bg: #F8FAFC;
+  --bs-body-color: var(--cd-black);
+
+  --bs-link-color: var(--cd-black);
+  --bs-link-hover-color: var(--cd-yellow);
+}
+
+body {
+  background-color: var(--bs-body-bg);
+}
