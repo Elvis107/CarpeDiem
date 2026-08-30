@@ -1,6 +1,12 @@
 @import "bootstrap/dist/css/bootstrap.min.css";
 
-/* Paleta CarpeDiem — Negro + Amarillo */
+html,
+body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
 :root {
   --cd-black: #111827;
   --cd-yellow: #FACC15;
@@ -8,7 +14,7 @@
   --cd-green: #22C55E;
   --cd-red: #EF4444;
 
-  /* Override de variables de Bootstrap 5.3 */
+
   --bs-primary: var(--cd-black);
   --bs-primary-rgb: 17, 24, 39;
 

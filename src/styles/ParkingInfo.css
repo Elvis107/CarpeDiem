@@ -1,0 +1,283 @@
+.cd-info {
+    color: var(--cd-black);
+}
+
+/* ---------- Navbar ---------- */
+.cd-info__navbar {
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+.cd-info__brand-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 0.75rem;
+    background: var(--cd-black);
+    color: var(--cd-yellow);
+}
+
+.cd-info__brand-name {
+    color: var(--cd-black);
+}
+
+.cd-info__brand-sub {
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: #92700a;
+}
+
+.cd-info__nav-link {
+    color: #475569 !important;
+    font-weight: 500;
+    transition: color 0.2s ease;
+}
+
+.cd-info__nav-link:hover {
+    color: var(--cd-black) !important;
+}
+
+/* ---------- Hero ---------- */
+.cd-info__hero {
+    background: #fff;
+}
+
+.cd-info__pill-active {
+    border-radius: 999px;
+    background: rgba(34, 197, 94, 0.1);
+    color: #15803d;
+}
+
+.cd-info__pill-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: var(--cd-green);
+}
+
+.cd-info__headline {
+    color: var(--cd-black);
+}
+
+.cd-info__accent-chip {
+    display: inline;
+    background: var(--cd-yellow);
+    color: var(--cd-black);
+    padding: 0 0.25em;
+    border-radius: 0.25em;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+}
+
+.cd-info__btn-outline {
+    border: 1px solid #cbd5e1;
+    color: var(--cd-black);
+    background: #fff;
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.cd-info__btn-outline:hover {
+    border-color: var(--cd-black);
+    background: #f8fafc;
+    color: var(--cd-black);
+}
+
+/* ---------- Tarjetas genéricas ---------- */
+.cd-info__card {
+    border-radius: 1rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.cd-info__icon-box {
+    width: 48px;
+    height: 48px;
+    border-radius: 0.75rem;
+    flex-shrink: 0;
+}
+
+.cd-info__icon-box--black {
+    background: var(--cd-black);
+    color: var(--cd-yellow);
+}
+
+.cd-info__icon-box--yellow {
+    background: rgba(250, 204, 21, 0.15);
+    color: #92700a;
+}
+
+.cd-info__icon-box--green {
+    background: rgba(34, 197, 94, 0.12);
+    color: #16a34a;
+}
+
+.cd-info__num--green {
+    color: #16a34a;
+}
+
+.cd-info__num--yellow {
+    color: #92700a;
+}
+
+.cd-info__num--red {
+    color: #dc2626;
+}
+
+.cd-info__progress-fill {
+    background-color: var(--cd-black);
+}
+
+/* ---------- Eyebrows / etiquetas de sección ---------- */
+.cd-info__eyebrow {
+    color: #92700a;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 0.06em;
+}
+
+.cd-info__section-alt {
+    background: #fff;
+}
+
+/* ---------- Disponibilidad: stats ---------- */
+.cd-info__stat-circle {
+    width: 70px;
+    height: 70px;
+    border-radius: 999px;
+}
+
+.cd-info__stat-circle--green {
+    background: rgba(34, 197, 94, 0.1);
+    color: #16a34a;
+}
+
+.cd-info__stat-circle--yellow {
+    background: rgba(250, 204, 21, 0.15);
+    color: #92700a;
+}
+
+.cd-info__stat-circle--red {
+    background: rgba(239, 68, 68, 0.1);
+    color: #dc2626;
+}
+
+.cd-info__stat-circle--black {
+    background: rgba(17, 24, 39, 0.08);
+    color: var(--cd-black);
+}
+
+.cd-info__badge-live {
+    background: rgba(34, 197, 94, 0.1);
+    color: #15803d;
+    font-weight: 600;
+}
+
+.cd-info__legend-dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 0.3rem;
+    display: inline-block;
+}
+
+.cd-info__legend-dot--green {
+    background: var(--cd-green);
+}
+
+.cd-info__legend-dot--yellow {
+    background: var(--cd-yellow);
+}
+
+.cd-info__legend-dot--red {
+    background: var(--cd-red);
+}
+
+.cd-info__icon-yellow {
+    color: #92700a;
+}
+
+.cd-info__icon-black {
+    color: var(--cd-black);
+}
+
+/* ---------- Grilla de espacios ---------- */
+.cd-info__spot {
+    border-radius: 0.6rem;
+    padding: 0.5rem;
+    border: 1px solid;
+}
+
+.cd-info__spot--disponible {
+    background: rgba(34, 197, 94, 0.1);
+    border-color: var(--cd-green);
+    color: #16a34a;
+}
+
+.cd-info__spot--reservado {
+    background: rgba(250, 204, 21, 0.18);
+    border-color: #ca8a04;
+    color: #92700a;
+}
+
+.cd-info__spot--ocupado {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: var(--cd-red);
+    color: #dc2626;
+}
+
+/* ---------- Tarifas ---------- */
+.cd-info__price-card {
+    border-top: 3px solid var(--cd-yellow) !important;
+}
+
+.cd-info__cat-badge {
+    display: inline-block;
+    background: rgba(250, 204, 21, 0.15);
+    color: #92700a;
+    font-weight: 700;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+}
+
+/* ---------- Footer ---------- */
+.cd-info__footer {
+    background: var(--cd-black);
+    color: #fff;
+}
+
+.cd-info__footer-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 0.75rem;
+    background: var(--cd-yellow);
+    color: var(--cd-black);
+}
+
+.cd-info__footer-sub {
+    color: rgba(255, 255, 255, 0.55);
+}
+
+.cd-info__footer-text {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.cd-info__footer-hr {
+    border-color: rgba(255, 255, 255, 0.15);
+    opacity: 1;
+}
+
+.cd-info__admin-btn {
+    background: var(--cd-yellow);
+    color: var(--cd-black) !important;
+    border-radius: 0.75rem;
+    font-weight: 700;
+    border: none;
+    transition: filter 0.2s ease, transform 0.15s ease;
+}
+
+.cd-info__admin-btn:hover {
+    filter: brightness(1.05);
+    transform: translateY(-1px);
+}

@@ -1,19 +1,3 @@
-/**
- * Dashboard.jsx
- * Página principal del sistema CarpeDiem para el encargado del estacionamiento.
- *
- * Muestra:
- *   - Sidebar de navegación
- *   - Mapa del estacionamiento en tiempo real (ParkingMap)
- *   - Botones de acceso rápido a las páginas de Entrada y Salida
- *     (se abren en una nueva pestaña para uso en terminales táctiles)
- *
- * Funcionalidad manual:
- *   El encargado puede hacer clic en cualquier espacio del mapa para
- *   cambiar su estado manualmente (ciclo: disponible → ocupado → reservado → disponible).
- *   Esto actualiza directamente la tabla "espacios" en Supabase.
- */
-
 import { Icon } from "@iconify/react";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "../supabaseClient";
@@ -28,9 +12,8 @@ import "../styles/Dashboard.css";
 export default function Dashboard() {
   const [lastIngreso, setLastIngreso] = useState(null);
   const [lastEgreso, setLastEgreso] = useState(null);
-  const [showActivosModal, setShowActivosModal] = useState(false);
-  const [showHistorial, setShowHistorial] = useState(false);
-  const [showReportes, setShowReportes] = useState(false);
+  // Sección activa del panel central: "mapa" | "vehiculos" | "historial" | "reportes"
+  const [seccionActiva, setSeccionActiva] = useState("mapa");
   const [sonidoActivo, setSonidoActivo] = useState(true);
   const audioCtxRef = useRef(null);
 
@@ -185,7 +168,7 @@ export default function Dashboard() {
 
   }, [sonidoActivo]);
 
-  const seccionAlterna = showActivosModal || showHistorial || showReportes;
+  const seccionAlterna = seccionActiva !== "mapa";
 
   return (
     <div className="cd-dash position-relative d-flex vh-100 overflow-hidden">
@@ -194,30 +177,14 @@ export default function Dashboard() {
 
       <div className="position-relative z-2 flex-shrink-0">
         <Sidebar
-          onOpenMapa={() => {
-            setShowActivosModal(false);
-            setShowHistorial(false);
-            setShowReportes(false);
-          }}
-          onOpenVehiculosServicio={() => {
-            setShowActivosModal((v) => !v);
-            setShowHistorial(false);
-            setShowReportes(false);
-          }}
-          onOpenHistorial={() => {
-            setShowHistorial((v) => !v);
-            setShowActivosModal(false);
-            setShowReportes(false);
-          }}
-          onOpenReportes={() => {
-            setShowReportes((v) => !v);
-            setShowActivosModal(false);
-            setShowHistorial(false);
-          }}
+          onOpenMapa={() => setSeccionActiva("mapa")}
+          onOpenVehiculosServicio={() => setSeccionActiva("vehiculos")}
+          onOpenHistorial={() => setSeccionActiva("historial")}
+          onOpenReportes={() => setSeccionActiva("reportes")}
         />
       </div>
 
-      <div className="position-relative z-1 flex-grow-1 min-w-0 vh-100 d-flex flex-column px-3 py-3 px-lg-4 py-lg-3">
+      <div className="position-relative z-1 flex-grow-1 min-w-0 vh-100 d-flex flex-column px-3 py-2 px-lg-4 py-lg-2 overflow-auto">
         {/* Header */}
         <div className="cd-dash__header d-flex align-items-center justify-content-between gap-4 mb-3">
           <div className="cd-dash__title-group min-w-0">
@@ -242,7 +209,7 @@ export default function Dashboard() {
 
         {/* Contenido */}
         <div className="flex-grow-1 min-h-0 d-flex gap-4">
-          <div className="flex-grow-1 min-w-0 d-flex flex-column">
+          <div className="flex-grow-1 min-w-0 min-h-0 d-flex flex-column">
             {!seccionAlterna && (
               <div className="mb-2 d-flex align-items-center justify-content-between gap-3 px-1">
                 <div>
@@ -259,12 +226,12 @@ export default function Dashboard() {
             )}
 
             <div className="flex-grow-1 min-h-0 min-w-0">
-              {showActivosModal ? (
-                <VehiculosActivosModal onClose={() => setShowActivosModal(false)} />
-              ) : showHistorial ? (
-                <HistorialReportes onClose={() => setShowHistorial(false)} />
-              ) : showReportes ? (
-                <Reportes onClose={() => setShowReportes(false)} />
+              {seccionActiva === "vehiculos" ? (
+                <VehiculosActivosModal onClose={() => setSeccionActiva("mapa")} />
+              ) : seccionActiva === "historial" ? (
+                <HistorialReportes onClose={() => setSeccionActiva("mapa")} />
+              ) : seccionActiva === "reportes" ? (
+                <Reportes onClose={() => setSeccionActiva("mapa")} />
               ) : (
                 <div className="cd-dash__map-card h-100">
                   <div className="h-100 min-h-0 p-0">
@@ -282,7 +249,7 @@ export default function Dashboard() {
           </div>
 
           {!seccionAlterna && (
-            <aside className="cd-dash__aside flex-shrink-0 h-100 d-flex flex-column gap-3 overflow-auto p-3">
+            <aside className="cd-dash__aside flex-shrink-0 h-100 min-h-0 d-flex flex-column gap-3 overflow-auto p-3">
               <div className="cd-dash__stat-card cd-dash__stat-card--in p-3">
                 <div className="mb-3 d-flex align-items-center gap-2">
                   <div className="cd-dash__stat-icon cd-dash__stat-icon--in">
