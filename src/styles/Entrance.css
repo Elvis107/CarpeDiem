@@ -624,3 +624,57 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+.cd-ent__vehicle-option {
+  min-height: 95px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.03);
+
+  color: inherit;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  gap: 8px;
+
+  padding: 14px 10px;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease,
+    background 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.cd-ent__vehicle-option:hover {
+  transform: translateY(-2px);
+
+  border-color: rgba(250, 204, 21, 0.55);
+
+  background: rgba(250, 204, 21, 0.06);
+}
+
+.cd-ent__vehicle-option > svg {
+  font-size: 30px;
+}
+
+.cd-ent__vehicle-option span {
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.cd-ent__vehicle-option--active {
+  border-color: rgba(250, 204, 21, 0.95);
+
+  background: rgba(250, 204, 21, 0.12);
+
+  box-shadow:
+    0 0 0 1px rgba(250, 204, 21, 0.18),
+    0 8px 24px rgba(0, 0, 0, 0.08);
+}

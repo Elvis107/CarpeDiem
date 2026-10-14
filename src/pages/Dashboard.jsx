@@ -7,6 +7,9 @@ import UltimoMovimiento from "../components/lastmove";
 import VehiculosActivosModal from "../components/ActVehicles";
 import HistorialReportes from "../components/HistorialReportes";
 import Reportes from "../components/Reportes";
+import Estadisticas from "../components/Statistics";
+import RegistroVehicularesBeneficiados from "../components/VehicleRegistration";
+import RegistroCredenciales from "../components/CredentialRegistration";
 import "../styles/Dashboard.css";
 
 export default function Dashboard() {
@@ -181,6 +184,9 @@ export default function Dashboard() {
           onOpenVehiculosServicio={() => setSeccionActiva("vehiculos")}
           onOpenHistorial={() => setSeccionActiva("historial")}
           onOpenReportes={() => setSeccionActiva("reportes")}
+          onOpenEstadisticas={() => setSeccionActiva("estadisticas")}
+          onOpenRegistrosVehiculares={() => setSeccionActiva("registro_vehiculares")}
+          onOpenRegistroCredenciales={() => setSeccionActiva("registro_credenciales")}
         />
       </div>
 
@@ -227,11 +233,36 @@ export default function Dashboard() {
 
             <div className="flex-grow-1 min-h-0 min-w-0">
               {seccionActiva === "vehiculos" ? (
-                <VehiculosActivosModal onClose={() => setSeccionActiva("mapa")} />
+                <VehiculosActivosModal 
+                onClose={() => setSeccionActiva("mapa")} 
+                />
+
               ) : seccionActiva === "historial" ? (
-                <HistorialReportes onClose={() => setSeccionActiva("mapa")} />
+                <HistorialReportes
+                 onClose={() => setSeccionActiva("mapa")} 
+                 />
+
               ) : seccionActiva === "reportes" ? (
-                <Reportes onClose={() => setSeccionActiva("mapa")} />
+                <Reportes
+                 onClose={() => setSeccionActiva("mapa")} 
+                 />
+
+              ) : seccionActiva === "estadisticas" ? (
+                <Estadisticas
+                 onClose={() => setSeccionActiva("mapa")} 
+                 />
+
+              ) : seccionActiva === "registro_vehiculares" ? (
+                <RegistroVehicularesBeneficiados
+                 onClose={() => setSeccionActiva("mapa")} 
+                 />
+              
+              ) : seccionActiva === "registro_credenciales" ? (
+                <RegistroCredenciales
+                 onClose={() => setSeccionActiva("mapa")} 
+                 />
+
+
               ) : (
                 <div className="cd-dash__map-card h-100">
                   <div className="h-100 min-h-0 p-0">

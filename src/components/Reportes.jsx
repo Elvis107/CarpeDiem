@@ -276,10 +276,6 @@ export default function Incidentes({ onClose }) {
               </p>
             </div>
           </div>
-          <div className="cd-rep__notice d-flex align-items-center gap-2">
-            <Icon icon="mdi:information-outline" />
-            La información quedará guardada de forma permanente
-          </div>
         </div>
 
         <form onSubmit={registrarIncidente} className="p-4">
