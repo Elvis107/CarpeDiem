@@ -508,7 +508,7 @@ export default function ParkingInfo() {
                                     <div className="d-flex justify-content-between align-items-start">
                                         <div>
                                             <span className="cd-info__cat-badge mb-2">Categoría A</span>
-                                            <h4 className="fw-bold">City cars y motos</h4>
+                                            <h4 className="fw-bold">Motocicletas</h4>
                                         </div>
                                         <div className="d-flex gap-2">
                                             <Icon icon="mdi:car-outline" width="30" className="cd-info__icon-black" />
@@ -517,7 +517,7 @@ export default function ParkingInfo() {
                                     </div>
 
                                     <p className="text-muted">
-                                        Autos pequeños, hatchbacks y motocicletas.
+                                        Motocicletas.
                                     </p>
 
                                     <div className="my-4">
@@ -547,7 +547,7 @@ export default function ParkingInfo() {
                                     <div className="d-flex justify-content-between align-items-start">
                                         <div>
                                             <span className="cd-info__cat-badge mb-2">Categoría B</span>
-                                            <h4 className="fw-bold">Tarifa normal</h4>
+                                            <h4 className="fw-bold">Vehículos normales</h4>
                                         </div>
                                         <div className="d-flex gap-2">
                                             <Icon icon="mdi:car-side" width="30" className="cd-info__icon-black" />
@@ -585,7 +585,7 @@ export default function ParkingInfo() {
                                     <div className="d-flex justify-content-between align-items-start">
                                         <div>
                                             <span className="cd-info__cat-badge mb-2">Categoría C</span>
-                                            <h4 className="fw-bold">Camionetas de empresa</h4>
+                                            <h4 className="fw-bold">Vehículos grandes</h4>
                                         </div>
                                         <div className="d-flex gap-2">
                                             <Icon icon="mdi:pickup-truck" width="30" className="cd-info__icon-black" />
@@ -593,7 +593,7 @@ export default function ParkingInfo() {
                                     </div>
 
                                     <p className="text-muted">
-                                        Camionetas, furgones y vehículos de empresa.
+                                        Camionetas, furgones y SUV.
                                     </p>
 
                                     <div className="my-4">
@@ -605,7 +605,7 @@ export default function ParkingInfo() {
 
                                     <div className="d-flex align-items-center mb-2">
                                         <Icon icon="line-md:confirm" className="cd-info__icon-yellow me-2" />
-                                        <span>Mínimo $1.000 (30 min)</span>
+                                        <span>Mínimo $850 (30 min)</span>
                                     </div>
                                     <div className="d-flex align-items-center">
                                         <Icon icon="line-md:confirm" className="cd-info__icon-yellow me-2" />

@@ -4,7 +4,16 @@ import { Icon } from "@iconify/react";
 import { supabase } from "../supabaseClient";
 import "../assets/css/Sidebar.css";
 
-export default function Sidebar({ onOpenVehiculosServicio, onOpenHistorial, onOpenReportes, onOpenMapa, }) {
+export default function Sidebar({ 
+  onOpenVehiculosServicio, 
+  onOpenHistorial, 
+  onOpenReportes, 
+  onOpenMapa, 
+  onOpenEstadisticas, 
+  onOpenRegistrosVehiculares, 
+  onOpenRegistroCredenciales
+}){
+
   const navigate = useNavigate();
   const [userEmail, setUserEmail] = useState("USUARIO");
   const [colapsado, setColapsado] = useState(false);
@@ -53,7 +62,6 @@ export default function Sidebar({ onOpenVehiculosServicio, onOpenHistorial, onOp
       </div>
 
       <div className="px-2 py-4 flex-grow-1 overflow-auto">
-        {/* Acceso rápido */}
         <div className="mb-4">
           {!colapsado && <h3 className="cd-sidebar__section-title">Acceso Rápido</h3>}
 
@@ -80,7 +88,6 @@ export default function Sidebar({ onOpenVehiculosServicio, onOpenHistorial, onOp
 
         <hr className="cd-sidebar__divider" />
 
-        {/* Gestión */}
         <div className="mb-4">
           {!colapsado && <h3 className="cd-sidebar__section-title">Gestión</h3>}
 
@@ -115,6 +122,37 @@ export default function Sidebar({ onOpenVehiculosServicio, onOpenHistorial, onOp
           </button>
 
           <button
+            onClick={onOpenRegistrosVehiculares}
+            className={`cd-sidebar__nav-btn btn w-100 d-flex align-items-center gap-2 mb-1 ${colapsado ? "justify-content-center" : ""}`}
+          >
+            <span className="cd-sidebar__icon-box cd-sidebar__icon-box--accent">
+              <Icon icon="mdi:car-multiple" className="fs-6" />
+            </span>
+            {!colapsado && <span>Vehiculos Beneficiados</span>}
+          </button>
+
+          <button
+            onClick={onOpenRegistroCredenciales}
+            className={`cd-sidebar__nav-btn btn w-100 d-flex align-items-center gap-2 mb-1 ${colapsado ? "justify-content-center" : ""}`}
+          >
+            <span className="cd-sidebar__icon-box cd-sidebar__icon-box--accent">
+              <Icon icon="mdi:badge-account-outline" className="fs-6" />
+            </span>
+            {!colapsado && <span>Registro de Credenciales</span>}
+          </button>
+
+          <button
+            onClick={onOpenEstadisticas}
+            className={`cd-sidebar__nav-btn btn w-100 d-flex align-items-center gap-2 mb-1 ${colapsado ? "justify-content-center" : ""}`}
+          >
+            <span className="cd-sidebar__icon-box cd-sidebar__icon-box--accent">
+              <Icon icon="mdi:chart-bar" className="fs-6" />
+            </span>
+            {!colapsado && <span>Graficos Estadisticos</span>}
+          </button>
+
+
+          <button
             onClick={onOpenHistorial}
             className={`cd-sidebar__nav-btn btn w-100 d-flex align-items-center gap-2 ${colapsado ? "justify-content-center" : ""}`}
           >
@@ -127,7 +165,7 @@ export default function Sidebar({ onOpenVehiculosServicio, onOpenHistorial, onOp
 
         <hr className="cd-sidebar__divider" />
 
-        {/* Acciones */}
+
         <div>
           <button
             onClick={handleLogout}

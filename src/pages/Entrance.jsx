@@ -17,7 +17,9 @@ export default function Entrance() {
 
   const [vehiculoExistente, setVehiculoExistente] = useState(null);
   const [vehiculoBuscado, setVehiculoBuscado] = useState(false);
+
   const [categoria, setCategoria] = useState("normal");
+
   const [registroActivo, setRegistroActivo] = useState(null);
 
   const verifyPassword = async () => {
@@ -50,11 +52,17 @@ export default function Entrance() {
 
   const formatPlate = (value) => {
     const clean = value.replace(/[^A-Z0-9]/gi, "").toUpperCase();
+
     let result = "";
+
     for (let i = 0; i < clean.length && i < 6; i++) {
-      if (i === 2 || i === 4) result += "-";
+      if (i === 2 || i === 4) {
+        result += "-";
+      }
+
       result += clean[i];
     }
+
     return result;
   };
 
@@ -63,8 +71,46 @@ export default function Entrance() {
   const row3 = ["A", "S", "D", "F", "G", "H", "J", "K", "L", "Ñ"];
   const row4 = ["Z", "X", "C", "V", "B", "N", "M"];
 
+  /* reglas de la patente chilena*/
+
+  const isKeyDisabled = (key) => {
+    const cleanPlate = plate.replace(/[^A-Z0-9]/gi, "").toUpperCase();
+
+    const position = cleanPlate.length;
+
+    if (position >= 6) {
+      return true;
+    }
+
+
+    const vocales = ["A", "E", "I", "O", "U"];
+
+    if (vocales.includes(key)) {
+      return true;
+    }
+
+    if (key === "Ñ") {
+      return true;
+    }
+
+    if (position < 4) {
+      return !/^[A-Z]$/.test(key) || /^[AEIOU]$/.test(key);
+    }
+
+    if (position >= 4) {
+      return !/^[0-9]$/.test(key);
+    }
+
+    return false;
+  };
+
   const pressKey = (key) => {
+    if (isKeyDisabled(key)) {
+      return;
+    }
+
     const nueva = formatPlate(plate + key);
+
     setPlate(nueva);
     setVehiculoBuscado(false);
     buscarVehiculo(nueva);
@@ -72,12 +118,15 @@ export default function Entrance() {
 
   const backspace = () => {
     const nueva = formatPlate(plate.slice(0, -1));
+
     setPlate(nueva);
     setVehiculoBuscado(false);
+    setVehiculoExistente(null);
   };
 
   const buscarVehiculo = async (patente) => {
     if (patente.length < 8) return;
+
     const { data } = await supabase
       .from("vehiculo")
       .select("*")
@@ -97,9 +146,16 @@ export default function Entrance() {
     setLoading(true);
     setError("");
 
-    const regexPatente = /^[A-Z]{2}-[A-Z]{2}-[0-9]{2}$/;
+    // Formato:
+    // 4 letras consonantes + 2 números
+    // Ejemplo: BB-CD-12
+    const regexPatente = /^[B-DF-HJ-NP-TV-Z]{2}-[B-DF-HJ-NP-TV-Z]{2}-[0-9]{2}$/;
+
     if (!regexPatente.test(plate)) {
-      setError("Formato de patente incorrecto (ej: AA-BB-12)");
+      setError(
+        "Formato de patente incorrecto. Debe contener 4 letras válidas y 2 números (ej: BB-CD-12)",
+      );
+
       setLoading(false);
 
       setVehiculoBuscado(false);
@@ -109,6 +165,7 @@ export default function Entrance() {
     }
 
     try {
+      // el sistema verifica si el vehiculo posee un registro activo
       const { data: ingresosPatente } = await supabase
         .from("ingreso")
         .select("id_ingreso")
@@ -127,6 +184,7 @@ export default function Entrance() {
         const idsConSalida = new Set(
           (salidasPatente || []).map((s) => s.id_ingreso),
         );
+
         const tieneIngresoActivo = ingresosPatente.some(
           (i) => !idsConSalida.has(i.id_ingreso),
         );
@@ -135,30 +193,75 @@ export default function Entrance() {
           setError(
             "Este vehículo ya tiene un ingreso activo sin salida registrada",
           );
+
           setLoading(false);
           return;
         }
       }
 
+      // registra un vehiculo en caso de que no llegue a existir
+
       if (!vehiculoExistente) {
-        const { data: cat } = await supabase
+        let nombreCategoria = "Normal";
+
+        if (categoria === "grande") {
+          nombreCategoria = "Grande";
+        }
+
+        if (categoria === "motocicleta") {
+          nombreCategoria = "Motocicleta";
+        }
+
+        const { data: cat, error: errorCategoria } = await supabase
           .from("categoria_vehiculo")
           .select("id_categoria")
-          .eq("nombre_categoria", categoria === "grande" ? "Grande" : "Normal")
+          .eq("nombre_categoria", nombreCategoria)
           .maybeSingle();
 
-        await supabase.from("vehiculo").insert({
-          patente: plate,
-          id_categoria: cat?.id_categoria || null,
-        });
+        if (errorCategoria) {
+          setError(
+            "Error al buscar la categoría: " + errorCategoria.message,
+          );
+
+          setLoading(false);
+          return;
+        }
+
+        if (!cat) {
+          setError(
+            `No se encontró la categoría "${nombreCategoria}" en la base de datos`,
+          );
+
+          setLoading(false);
+          return;
+        }
+
+        const { error: errorVehiculo } = await supabase
+          .from("vehiculo")
+          .insert({
+            patente: plate,
+            id_categoria: cat.id_categoria,
+          });
+
+        if (errorVehiculo) {
+          setError(
+            "Error al registrar el vehículo: " + errorVehiculo.message,
+          );
+
+          setLoading(false);
+          return;
+        }
       }
+
+      // se encarga de registrar el ingreso del vehiculo
+      const ahora = new Date();
 
       const { data: ingreso, error: errIngreso } = await supabase
         .from("ingreso")
         .insert({
           patente: plate,
-          fecha_ingreso: new Date().toLocaleDateString("sv-SE"),
-          hora_ingreso: new Date().toTimeString().split(" ")[0],
+          fecha_ingreso: ahora.toLocaleDateString("sv-SE"),
+          hora_ingreso: ahora.toTimeString().split(" ")[0],
         })
         .select()
         .single();
@@ -169,18 +272,22 @@ export default function Entrance() {
         return;
       }
 
+      // muestra la confirmacion
+
       setRegistroActivo(ingreso);
+
       setTimeout(() => {
         setPlate("");
         setVehiculoBuscado(false);
         setVehiculoExistente(null);
         setRegistroActivo(null);
-      }, 3000);
 
-      setRegistroActivo(ingreso);
+        setCategoria("normal");
+      }, 3000);
     } catch (e) {
       setError("Error inesperado: " + e.message);
     }
+
     setLoading(false);
   };
 
@@ -204,6 +311,7 @@ export default function Entrance() {
               <span className="cd-ent__pill-dot" />
               Vista en tiempo real
             </span>
+
             <span className="cd-ent__pill cd-ent__pill--neutral d-inline-flex align-items-center gap-2">
               <Icon icon="mdi:map-marker-outline" />
               Operación activa
@@ -212,7 +320,6 @@ export default function Entrance() {
         </div>
 
         <div className="cd-ent__grid">
-          {/* Mapa */}
           <div className="cd-ent__panel d-flex flex-column overflow-hidden">
             <div className="cd-ent__panel-header d-flex align-items-start justify-content-between gap-4 px-4 px-sm-5 py-4">
               <div className="min-w-0">
@@ -220,16 +327,15 @@ export default function Entrance() {
                   <span className="cd-ent__badge-dot" />
                   Mapa en vivo
                 </div>
+
                 <h2 className="cd-ent__panel-title mt-3 mb-0">
                   Mapa del estacionamiento
                 </h2>
-                <p className="cd-ent__panel-subtitle mt-2 mb-0">
-                  Supervisión visual de los espacios disponibles con una
-                  presentación limpia, profesional y fácil de leer.
-                </p>
               </div>
+
               <div className="cd-ent__status-box d-none d-sm-block flex-shrink-0">
                 <p className="cd-ent__status-label mb-0">Estado</p>
+
                 <p className="cd-ent__status-value mt-1 mb-0">
                   Operación activa
                 </p>
@@ -245,7 +351,6 @@ export default function Entrance() {
             </div>
           </div>
 
-          {/* Formulario de entrada */}
           <div className="cd-ent__panel d-flex flex-column overflow-hidden">
             <div className="cd-ent__panel-header px-4 px-sm-5 py-4">
               <div className="d-flex align-items-start justify-content-between gap-4">
@@ -254,16 +359,10 @@ export default function Entrance() {
                     <Icon icon="mdi:car-arrow-right" />
                     Registro de entrada
                   </div>
+
                   <h1 className="cd-ent__title mt-3 mb-0">Entrada</h1>
-                  <p className="cd-ent__panel-subtitle mt-2 mb-0">
-                    Captura la patente, confirma el vehículo y registra el
-                    ingreso sin perder fluidez.
-                  </p>
                 </div>
-                <div className="cd-ent__status-box d-none d-sm-block text-end">
-                  <p className="cd-ent__status-label mb-0">Teclado</p>
-                  <p className="cd-ent__status-value mt-1 mb-0">Modo táctil</p>
-                </div>
+
               </div>
             </div>
 
@@ -271,11 +370,15 @@ export default function Entrance() {
               <div className="d-flex flex-column gap-3 h-100 min-h-0">
                 <div className="cd-ent__card p-3">
                   <div className="mb-3 d-flex align-items-center justify-content-between gap-3">
-                    <span className="cd-ent__field-label">Patente</span>
+                    <span className="cd-ent__field-label">
+                      Patente
+                    </span>
+
                     <span className="cd-ent__field-hint">
-                      Formato: AA-BB-12
+                      Formato: BC-DF-12
                     </span>
                   </div>
+
                   <input
                     value={plate}
                     readOnly
@@ -291,44 +394,52 @@ export default function Entrance() {
                         <button
                           key={key}
                           onClick={() => pressKey(key)}
+                          disabled={isKeyDisabled(key)}
                           className="cd-ent__key"
                         >
                           {key}
                         </button>
                       ))}
                     </div>
+
                     <div className="cd-ent__key-row">
                       {row2.map((key) => (
                         <button
                           key={key}
                           onClick={() => pressKey(key)}
+                          disabled={isKeyDisabled(key)}
                           className="cd-ent__key"
                         >
                           {key}
                         </button>
                       ))}
                     </div>
+
                     <div className="cd-ent__key-row">
                       {row3.map((key) => (
                         <button
                           key={key}
                           onClick={() => pressKey(key)}
+                          disabled={isKeyDisabled(key)}
                           className="cd-ent__key"
                         >
                           {key}
                         </button>
                       ))}
                     </div>
+
                     <div className="cd-ent__key-row">
                       {row4.map((key) => (
                         <button
                           key={key}
                           onClick={() => pressKey(key)}
+                          disabled={isKeyDisabled(key)}
                           className="cd-ent__key"
                         >
                           {key}
                         </button>
                       ))}
+
                       <button
                         onClick={backspace}
                         className="cd-ent__key-backspace d-flex align-items-center justify-content-center gap-2"
@@ -348,27 +459,74 @@ export default function Entrance() {
                           <div className="cd-ent__notice-icon cd-ent__notice-icon--new">
                             <Icon icon="mdi:car-plus" />
                           </div>
+
                           <div className="min-w-0 flex-grow-1">
                             <p className="cd-ent__notice-eyebrow cd-ent__notice-eyebrow--new mb-0">
                               Vehículo nuevo
                             </p>
+
                             <p className="cd-ent__notice-title mt-2 mb-0">
-                              Selecciona la categoría antes de registrar la
-                              entrada.
+                              Selecciona el tipo de vehículo antes de registrar
+                              la entrada.
                             </p>
-                            <div className="mt-3 d-flex gap-2">
-                              <button
-                                onClick={() => setCategoria("normal")}
-                                className={`cd-ent__cat-btn flex-grow-1 ${categoria === "normal" ? "cd-ent__cat-btn--active" : ""}`}
-                              >
-                                Normal
-                              </button>
-                              <button
-                                onClick={() => setCategoria("grande")}
-                                className={`cd-ent__cat-btn flex-grow-1 ${categoria === "grande" ? "cd-ent__cat-btn--active" : ""}`}
-                              >
-                                XL / Grande
-                              </button>
+
+                            {/* categorias de los vehiculos  que existen*/}
+                            <div className="mt-3 row g-2">
+                              <div className="col-12 col-md-4">
+                                <button
+                                  type="button"
+                                  onClick={() => setCategoria("normal")}
+                                  className={`cd-ent__vehicle-option w-100 ${
+                                    categoria === "normal"
+                                      ? "cd-ent__vehicle-option--active"
+                                      : ""
+                                  }`}
+                                >
+                                  <Icon icon="mdi:car-outline" />
+
+                                  <span>
+                                    Vehículo normal
+                                  </span>
+                                </button>
+                              </div>
+
+                              <div className="col-12 col-md-4">
+                                <button
+                                  type="button"
+                                  onClick={() => setCategoria("grande")}
+                                  className={`cd-ent__vehicle-option w-100 ${
+                                    categoria === "grande"
+                                      ? "cd-ent__vehicle-option--active"
+                                      : ""
+                                  }`}
+                                >
+                                  <Icon icon="mdi:car-estate" />
+
+                                  <span>
+                                    Vehículo grande
+                                  </span>
+                                </button>
+                              </div>
+
+                              <div className="col-12 col-md-4">
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setCategoria("motocicleta")
+                                  }
+                                  className={`cd-ent__vehicle-option w-100 ${
+                                    categoria === "motocicleta"
+                                      ? "cd-ent__vehicle-option--active"
+                                      : ""
+                                  }`}
+                                >
+                                  <Icon icon="mdi:motorbike" />
+
+                                  <span>
+                                    Motocicleta
+                                  </span>
+                                </button>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -379,16 +537,19 @@ export default function Entrance() {
                           <div className="cd-ent__notice-icon cd-ent__notice-icon--found">
                             <Icon icon="mdi:check-circle-outline" />
                           </div>
+
                           <div>
                             <p className="cd-ent__notice-eyebrow cd-ent__notice-eyebrow--found mb-0">
                               Vehículo encontrado
                             </p>
+
                             <p className="cd-ent__notice-title mt-2 mb-0">
                               Este vehículo ya existe en el sistema.
                             </p>
+
                             <p className="cd-ent__notice-text mt-1 mb-0">
-                              Está listo para registrar la entrada sin crear un
-                              nuevo registro.
+                              Está listo para registrar la entrada sin crear
+                              un nuevo registro.
                             </p>
                           </div>
                         </div>
@@ -403,13 +564,16 @@ export default function Entrance() {
                       <div className="cd-ent__notice-icon cd-ent__notice-icon--success">
                         <Icon icon="mdi:check-decagram-outline" />
                       </div>
+
                       <div>
                         <p className="cd-ent__notice-eyebrow cd-ent__notice-eyebrow--success mb-0">
                           Registro exitoso
                         </p>
+
                         <p className="cd-ent__notice-title mt-2 mb-0">
                           Entrada registrada correctamente.
                         </p>
+
                         <p className="cd-ent__notice-text mt-1 mb-0">
                           {registroActivo.fecha_ingreso}{" "}
                           {registroActivo.hora_ingreso}
@@ -425,10 +589,12 @@ export default function Entrance() {
                       <div className="cd-ent__notice-icon cd-ent__notice-icon--error">
                         <Icon icon="mdi:alert-circle-outline" />
                       </div>
+
                       <div>
                         <p className="cd-ent__notice-eyebrow cd-ent__notice-eyebrow--error mb-0">
                           Error
                         </p>
+
                         <p className="cd-ent__notice-text-strong mt-2 mb-0">
                           {error}
                         </p>
@@ -442,7 +608,9 @@ export default function Entrance() {
                   disabled={loading || plate.length < 8}
                   className="cd-ent__submit-btn w-100 d-flex align-items-center justify-content-center"
                 >
-                  {loading ? "Registrando..." : "Registrar entrada"}
+                  {loading
+                    ? "Registrando..."
+                    : "Registrar entrada"}
                 </button>
               </div>
             </div>
@@ -454,11 +622,16 @@ export default function Entrance() {
         <div className="cd-ent__modal-overlay position-fixed d-flex align-items-center justify-content-center p-3">
           <div className="cd-ent__modal">
             <div className="cd-ent__modal-bar" />
+
             <div className="px-4 px-sm-5 pb-5 pt-5 text-center">
               <div className="cd-ent__modal-icon mx-auto mb-3">
                 <Icon icon="mdi:lock-outline" />
               </div>
-              <h2 className="cd-ent__modal-title mb-0">Confirmación</h2>
+
+              <h2 className="cd-ent__modal-title mb-0">
+                Confirmación
+              </h2>
+
               <p className="cd-ent__modal-subtitle mt-2 mx-auto mb-0">
                 Ingresa tu contraseña para volver a la página del encargado.
               </p>
@@ -472,20 +645,29 @@ export default function Entrance() {
                     onChange={(e) => setPassword(e.target.value)}
                     className="cd-ent__modal-input w-100"
                   />
+
                   <button
                     type="button"
-                    onClick={() => setShowPassword(!showPassword)}
+                    onClick={() =>
+                      setShowPassword(!showPassword)
+                    }
                     className="cd-ent__modal-eye"
                   >
                     <Icon
                       icon={
-                        showPassword ? "mdi:eye-off-outline" : "mdi:eye-outline"
+                        showPassword
+                          ? "mdi:eye-off-outline"
+                          : "mdi:eye-outline"
                       }
                     />
                   </button>
                 </div>
 
-                {error && <div className="cd-ent__modal-error">{error}</div>}
+                {error && (
+                  <div className="cd-ent__modal-error">
+                    {error}
+                  </div>
+                )}
 
                 <div className="row g-3">
                   <div className="col-6">
@@ -501,6 +683,7 @@ export default function Entrance() {
                       Cancelar
                     </button>
                   </div>
+
                   <div className="col-6">
                     <button
                       type="button"
@@ -508,7 +691,9 @@ export default function Entrance() {
                       disabled={loading}
                       className="cd-ent__modal-confirm w-100"
                     >
-                      {loading ? "Validando..." : "Confirmar"}
+                      {loading
+                        ? "Validando..."
+                        : "Confirmar"}
                     </button>
                   </div>
                 </div>
